@@ -1,4 +1,5 @@
 # HTTP Selftest
+[![Build Status](https://travis-ci.org/1and1/httpselftest.svg?branch=master)](https://travis-ci.org/1and1/httpselftest)
 
 This repo implements a base servlet and surrounding infrastructure to enable semi-automatic tests against a running application in any development stage.
 
