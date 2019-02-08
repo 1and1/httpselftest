@@ -1,13 +1,13 @@
 # HTTP Selftest
 [![Build Status](https://travis-ci.org/1and1/httpselftest.svg?branch=master)](https://travis-ci.org/1and1/httpselftest)
 
-This repo implements a base servlet and surrounding infrastructure to enable semi-automatic tests against a running application in any development stage.
+This repo implements a base servlet and surrounding infrastructure to enable semi-automatic tests against a running application in any development stage. The tests are deployed with the application and run against itself. Test parameters can be pre-defined or provided by the user. This allows to have meaningful test parameters across multiple stages and environments.
 
-- Test parameters can be supplied by the developer for different environments, but can also easily be overridden/provided by the user.
-- Tests are run via HTTP from within the application against itself.
-- HTTP request, response and optionally the corresponding application log messages of every request are output in detail. Currently Logback is supported as logging backend.
-- Test cases are implemented by subclassing `net.oneandone.httpselftest.servlet.SelftestServlet`.
-- Test cases are defined within the subclass as static inner implementations of `net.oneandone.httpselftest.test.api.TestCase`.
+The intended use is not clear-cut. The servlet can be used for e.g.
+- basic integration tests,
+- smoke tests before general release,
+- incident response,
+- definitive insight into interface behavior.
 
 ## Usage example
 ### Test run summary
