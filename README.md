@@ -1,5 +1,7 @@
 # HTTP Selftest
 [![Build Status](https://travis-ci.org/1and1/httpselftest.svg?branch=master)](https://travis-ci.org/1and1/httpselftest)
+[![Latest release](https://img.shields.io/github/release/1and1/httpselftest.svg)](https://github.com/1and1/httpselftest/releases/latest)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.oneandone.httpselftest/selftest-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.oneandone.httpselftest/selftest-core)
 
 This repo implements a base servlet and surrounding infrastructure to enable semi-automatic tests against a running application in any development stage. The tests are deployed with the application and run against itself. Test parameters can be pre-defined or provided by the user. This allows to have meaningful test parameters across multiple stages and environments.
 
@@ -55,6 +57,12 @@ mvn spring-boot:run
    <version>$VERSION</version>
 </dependency>
 ```
+
+### Dependencies
+The JAR has a compile dependency on Logback. This will be made optional in the next version, with the goal being to support different logging solutions. Most of the code is already prepared for that.
+
+### Security
+The servlet is not supposed to be exposed to the internet. This is an internal developer tool.
 
 ### Spring Boot 2
 If your application is a Spring Boot 2 app, the servlet can be registered as a `@ServletEndpoint`. In this case the application port and base path may need to be provided manually. The endpoint MUST be exposed as a `@Bean`. The servlet will be running on the management port.
@@ -133,4 +141,3 @@ If you have a `web.xml` you can register it there.
 - `selftest.override.port` (OPTIONAL, servlet init parameter) - Override application port. This is only needed if the servlet runs on another port.
 - `selftest.override.contextpath` (OPTIONAL, servlet init parameter) - Override application context path. This is only needed if the servlet runs on another port.
 - `selftest.override.mdckey` (OPTIONAL, servlet init parameter) - Override the MDC key storing the request tracking id. Defaults to `X-REQUEST-ID`.
-
