@@ -1,5 +1,6 @@
 # HTTP Selftest
 [![Build Status](https://travis-ci.org/1and1/httpselftest.svg?branch=master)](https://travis-ci.org/1and1/httpselftest)
+[![codecov](https://codecov.io/gh/1and1/httpselftest/branch/master/graph/badge.svg)](https://codecov.io/gh/1and1/httpselftest)
 [![Latest release](https://img.shields.io/github/release/1and1/httpselftest.svg)](https://github.com/1and1/httpselftest/releases/latest)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/net.oneandone.httpselftest/selftest-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/net.oneandone.httpselftest/selftest-core)
 
