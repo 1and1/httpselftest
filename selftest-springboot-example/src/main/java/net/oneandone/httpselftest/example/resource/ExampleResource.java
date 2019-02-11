@@ -40,12 +40,8 @@ public class ExampleResource {
 
     @GET
     @Path("slow")
-    public void slow() {
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+    public void slow() throws InterruptedException {
+        Thread.sleep(500);
     }
 
 }
