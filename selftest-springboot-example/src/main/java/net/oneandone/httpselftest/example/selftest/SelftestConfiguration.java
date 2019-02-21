@@ -39,6 +39,7 @@ public class SelftestConfiguration {
         @Override
         public EndpointServlet get() {
             return new EndpointServlet(ExampleSelftestServlet.class) //
+                    .withInitParameter(SelftestServlet.PROP_CONFIGGROUPS, env.getProperty(SelftestServlet.PROP_CONFIGGROUPS)) //
                     .withInitParameter(SelftestServlet.PROP_OVERRIDE_PORT, env.getProperty(SelftestServlet.PROP_OVERRIDE_PORT)) //
                     .withInitParameter(SelftestServlet.PROP_OVERRIDE_PATH, env.getProperty(SelftestServlet.PROP_OVERRIDE_PATH));
         }

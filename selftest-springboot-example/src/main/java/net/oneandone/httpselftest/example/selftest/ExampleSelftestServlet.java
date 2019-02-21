@@ -26,8 +26,10 @@ public class ExampleSelftestServlet extends SelftestServlet {
     protected TestConfigs getConfigs() {
 
         TestConfigs configs = new TestConfigs(FIRSTNAME, LASTNAME);
-        configs.put("config1", "stephen", "colbert");
-        configs.put("config2", "stephen", "hillenburg");
+        configs.put("someconfig local", "stephen", "colbert");
+        configs.put("otherconfig local", "stephen", "hillenburg");
+        configs.put("someconfig staging", "calvin", "hobbes");
+        configs.put("otherconfig staging", "ellen", "ripley");
         return configs;
     }
 
