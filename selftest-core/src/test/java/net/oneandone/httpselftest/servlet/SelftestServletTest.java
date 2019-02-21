@@ -56,16 +56,16 @@ public class SelftestServletTest {
         assertThat(stub.attachWasCalled).as("was attached").isFalse();
 
         // GET
-        MockHttpServletResponse getResponse = new MockHttpServletResponse();
-        servlet.doGet(newAuthorizedExecuteRequest(), getResponse);
-        assertThat(getResponse).hasFieldOrPropertyWithValue("status", 200);
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        servlet.doGet(newAuthorizedExecuteRequest(), response);
+        assertThat(response.getStatus()).as("status").isEqualTo(200);
         assertThat(allAttachedSelftestAppenders()).as("attached appenders after GET").isEmpty();
         assertThat(stub.attachWasCalled).as("was attached").isFalse();
 
         // POST
-        MockHttpServletResponse postResponse = new MockHttpServletResponse();
-        servlet.doPost(newAuthorizedExecuteRequest(), postResponse);
-        assertThat(postResponse).hasFieldOrPropertyWithValue("status", 200);
+        response = new MockHttpServletResponse();
+        servlet.doPost(newAuthorizedExecuteRequest(), response);
+        assertThat(response.getStatus()).as("status").isEqualTo(200);
         assertThat(allAttachedSelftestAppenders()).as("attached appenders after POST").isEmpty();
         assertThat(stub.attachWasCalled).as("was attached").isTrue();
     }
@@ -96,6 +96,29 @@ public class SelftestServletTest {
         assertThat(guaranteeLeadingAndTrailingSlash("path/")).isEqualTo("/path/");
         assertThat(guaranteeLeadingAndTrailingSlash("path")).isEqualTo("/path/");
         assertThat(guaranteeLeadingAndTrailingSlash("/path/")).isEqualTo("/path/");
+    }
+
+    @Test
+    public void authorization() throws Exception {
+        SelftestServlet servlet = new SimpleSelftestServlet();
+        doReturn("user:pw").when(servletConfigMock).getInitParameter(SelftestServlet.PROP_CREDENTIALS);
+        doReturn("8080").when(servletConfigMock).getInitParameter(SelftestServlet.PROP_OVERRIDE_PORT);
+        doReturn("basepath").when(servletConfigMock).getInitParameter(SelftestServlet.PROP_OVERRIDE_PATH);
+        servlet.init(servletConfigMock);
+
+        // GET
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        servlet.doGet(new MockHttpServletRequest(), response);
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getHeader("WWW-Authenticate")).isEqualTo("Basic");
+        assertThat(response.getContentAsByteArray()).isEmpty();
+
+        // POST
+        response = new MockHttpServletResponse();
+        servlet.doGet(new MockHttpServletRequest(), response);
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(response.getHeader("WWW-Authenticate")).isEqualTo("Basic");
+        assertThat(response.getContentAsByteArray()).isEmpty();
     }
 
     public static class SimpleSelftestServlet extends SelftestServlet {
