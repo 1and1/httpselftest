@@ -53,7 +53,7 @@ public class TestRunner {
 
         logSupport.runWithAttachedAppenders(new HashSet<>(runIds.values()), () -> {
             for (TestCase test : tests) {
-                ctx.reset();
+                ctx.resetClues();
                 run(test, runIds.get(test), ctx);
             }
         });

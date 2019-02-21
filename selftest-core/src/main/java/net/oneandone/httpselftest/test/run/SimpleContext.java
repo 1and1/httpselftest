@@ -18,7 +18,7 @@ public class SimpleContext implements Context {
         clues = new LinkedList<>();
     }
 
-    void reset() {
+    void resetClues() {
         clues = new LinkedList<>();
     }
 
@@ -35,6 +35,7 @@ public class SimpleContext implements Context {
 
     @Override
     public void addClue(String clue) {
+        Objects.requireNonNull(clue, "clue");
         clues.add(clue);
     }
 
