@@ -7,8 +7,14 @@ import java.util.StringJoiner;
 import org.junit.Test;
 
 import net.oneandone.httpselftest.test.api.TestConfigs;
+import net.trajano.commons.testing.UtilityClassTestUtil;
 
 public class RequestHelperTest {
+
+    @Test
+    public void isUtilityClass() throws Exception {
+        UtilityClassTestUtil.assertUtilityClassWellDefined(RequestHelper.class);
+    }
 
     @Test
     public void addFormParams() throws Exception {

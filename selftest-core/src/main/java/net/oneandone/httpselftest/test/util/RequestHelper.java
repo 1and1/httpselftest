@@ -6,7 +6,7 @@ import java.util.StringJoiner;
 
 import net.oneandone.httpselftest.test.api.TestValues;
 
-public class RequestHelper {
+public final class RequestHelper {
 
     private RequestHelper() {
     }
