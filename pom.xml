@@ -11,6 +11,7 @@
     <modules>
         <module>selftest-core</module>
         <module>selftest-springboot-example</module>
+        <module>selftest-nologger-tests</module>
     </modules>
 
     <name>HTTP-Selftest</name>

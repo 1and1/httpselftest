@@ -59,9 +59,6 @@ mvn spring-boot:run
 </dependency>
 ```
 
-### Dependencies
-The JAR has a compile dependency on Logback. This will be made optional in the next version, with the goal being to support different logging solutions. Most of the code is already prepared for that.
-
 ### Security
 The servlet is not supposed to be exposed to the internet. This is an internal developer tool.
 
@@ -138,7 +135,11 @@ If you have a `web.xml` you can register it there.
 ```
 
 ## Configuration
-- `selftest.user.colon.password` (OPTIONAL, servlet init parameter) - Used for HTTP Basic authentication
-- `selftest.override.port` (OPTIONAL, servlet init parameter) - Override application port. This is only needed if the servlet runs on another port.
-- `selftest.override.contextpath` (OPTIONAL, servlet init parameter) - Override application context path. This is only needed if the servlet runs on another port.
-- `selftest.override.mdckey` (OPTIONAL, servlet init parameter) - Override the MDC key storing the request tracking id. Defaults to `X-REQUEST-ID`.
+|  Servlet init parameter | Description | Default value |
+|---|---| --- |
+| `selftest.user.colon.password` | Credentials for HTTP Basic authentication | no authentication |
+| `selftest.logger` | Logging framework to be used for log message extraction. Possible values: `[none, logback]` | `logback` |
+| `selftest.configgroups` | Config groups can be used to filter out pre-defined configs that are irrelevant to the current environment. The values will be matched against the current hostname. Example: `"local, staging"`. Check the example application for usage. | no groups |
+| `selftest.override.port` | Override for application port. Necessary if the httpselftest servlet runs on another port. | application port |
+| `selftest.override.contextpath` | Override for application context path. Necessary if the httpselftest servlet runs on another port. | application path |
+| `selftest.override.mdckey` | Override for MDC key storing the request tracking id. | `X-REQUEST-ID` |

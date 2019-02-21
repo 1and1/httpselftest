@@ -9,11 +9,11 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>selftest-springboot-example</artifactId>
+    <artifactId>selftest-nologger-tests</artifactId>
 
     <packaging>jar</packaging>
 
-    <name>HTTP-Selftest Example for Spring Boot 2 app</name>
+    <name>HTTP-Selftest Tests to guarantee basic functionality without logging framework</name>
 
     <properties>
         <spring-boot.version>2.0.5.RELEASE</spring-boot.version>
@@ -26,6 +26,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
             <version>${spring-boot.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -43,7 +49,6 @@
             <artifactId>selftest-core</artifactId>
             <version>${project.version}</version>
         </dependency>
-
 
         <!-- TRANSITIVE DEPENDENCY MANAGEMENT :( -->
         <!-- up-manage from 4.x -->

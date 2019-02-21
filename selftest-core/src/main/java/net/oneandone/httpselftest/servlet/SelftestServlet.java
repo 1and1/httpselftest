@@ -28,6 +28,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.oneandone.httpselftest.log.InactiveLogSupport;
 import net.oneandone.httpselftest.log.LogSupport;
 import net.oneandone.httpselftest.log.logback.LogbackSupport;
 import net.oneandone.httpselftest.test.api.TestCase;
@@ -47,9 +48,12 @@ public abstract class SelftestServlet extends HttpServlet {
 
     public static final String PROP_CREDENTIALS = "selftest.credentials";
     public static final String PROP_CONFIGGROUPS = "selftest.configgroups";
+    public static final String PROP_LOGGER = "selftest.logger";
     public static final String PROP_OVERRIDE_PORT = "selftest.override.port";
     public static final String PROP_OVERRIDE_PATH = "selftest.override.contextpath";
     public static final String PROP_OVERRIDE_MDC_KEY = "selftest.override.mdckey";
+
+    private static final List<String> LOGGER_VALUES = Arrays.asList("none", "logback");
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -85,13 +89,20 @@ public abstract class SelftestServlet extends HttpServlet {
 
         configuredPort = Optional.ofNullable(config.getInitParameter(PROP_OVERRIDE_PORT)).map(Integer::parseInt);
         if (configuredPort.isPresent() && configuredPort.get() <= 0) {
-            throw new IllegalStateException("invalid selftest port override: " + configuredPort.get());
+            throw new IllegalStateException(String.format("invalid value for %s: %s", PROP_OVERRIDE_PORT, configuredPort.get()));
         }
 
         configuredContextPath = Optional.ofNullable(config.getInitParameter(PROP_OVERRIDE_PATH));
 
         Optional<String> mdcKeyOverride = Optional.ofNullable(config.getInitParameter(PROP_OVERRIDE_MDC_KEY));
-        logSupport = new LogbackSupport(mdcKeyOverride.orElse(X_REQUEST_ID));
+
+        String logger = Optional.ofNullable(config.getInitParameter(PROP_LOGGER)).orElse("logback");
+        if (!LOGGER_VALUES.contains(logger)) {
+            throw new IllegalStateException(
+                    String.format("invalid value for %s: %s (possible values: %s)", PROP_LOGGER, logger, LOGGER_VALUES));
+        }
+        logSupport =
+                logger.equals("logback") ? new LogbackSupport(mdcKeyOverride.orElse(X_REQUEST_ID)) : new InactiveLogSupport();
 
         String configGroupsParam = config.getInitParameter(PROP_CONFIGGROUPS);
         if (configGroupsParam != null) {
