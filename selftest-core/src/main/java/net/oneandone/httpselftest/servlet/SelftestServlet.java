@@ -1,6 +1,5 @@
 package net.oneandone.httpselftest.servlet;
 
-import static net.oneandone.httpselftest.common.Constants.X_REQUEST_ID;
 import static net.oneandone.httpselftest.writer.SelftestHtmlWriter.CONFIG_ID;
 import static net.oneandone.httpselftest.writer.SelftestHtmlWriter.EXECUTE;
 import static net.oneandone.httpselftest.writer.SelftestHtmlWriter.PARAMETER_PREFIX;
@@ -11,7 +10,6 @@ import static java.util.stream.Collectors.toSet;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -28,9 +26,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.oneandone.httpselftest.log.InactiveLogSupport;
 import net.oneandone.httpselftest.log.LogSupport;
-import net.oneandone.httpselftest.log.logback.LogbackSupport;
 import net.oneandone.httpselftest.test.api.TestCase;
 import net.oneandone.httpselftest.test.api.TestConfigs;
 import net.oneandone.httpselftest.test.run.TestRunner;
@@ -52,8 +48,6 @@ public abstract class SelftestServlet extends HttpServlet {
     public static final String PROP_OVERRIDE_PORT = "selftest.override.port";
     public static final String PROP_OVERRIDE_PATH = "selftest.override.contextpath";
     public static final String PROP_OVERRIDE_MDC_KEY = "selftest.override.mdckey";
-
-    private static final List<String> LOGGER_VALUES = Arrays.asList("none", "logback");
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -82,35 +76,11 @@ public abstract class SelftestServlet extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-
-        String rawCredentials = config.getInitParameter(PROP_CREDENTIALS);
-        rawCredentials = (rawCredentials == null || rawCredentials.trim().isEmpty()) ? null : rawCredentials.trim();
-        configuredCredentials = Optional.ofNullable(rawCredentials);
-
-        configuredPort = Optional.ofNullable(config.getInitParameter(PROP_OVERRIDE_PORT)).map(Integer::parseInt);
-        if (configuredPort.isPresent() && configuredPort.get() <= 0) {
-            throw new IllegalStateException(String.format("invalid value for %s: %s", PROP_OVERRIDE_PORT, configuredPort.get()));
-        }
-
-        configuredContextPath = Optional.ofNullable(config.getInitParameter(PROP_OVERRIDE_PATH));
-
-        Optional<String> mdcKeyOverride = Optional.ofNullable(config.getInitParameter(PROP_OVERRIDE_MDC_KEY));
-
-        String logger = Optional.ofNullable(config.getInitParameter(PROP_LOGGER)).orElse("logback");
-        if (!LOGGER_VALUES.contains(logger)) {
-            throw new IllegalStateException(
-                    String.format("invalid value for %s: %s (possible values: %s)", PROP_LOGGER, logger, LOGGER_VALUES));
-        }
-        logSupport =
-                logger.equals("logback") ? new LogbackSupport(mdcKeyOverride.orElse(X_REQUEST_ID)) : new InactiveLogSupport();
-
-        String configGroupsParam = config.getInitParameter(PROP_CONFIGGROUPS);
-        if (configGroupsParam != null) {
-            List<String> collect = Arrays.asList(configGroupsParam.split(",")).stream().map(String::trim).collect(toList());
-            configuredConfigGroups = Optional.of(collect);
-        } else {
-            configuredConfigGroups = Optional.empty();
-        }
+        configuredCredentials = Configurator.getCredentials(config);
+        configuredPort = Configurator.getPort(config);
+        configuredContextPath = Configurator.getContextPath(config);
+        logSupport = Configurator.getLogSupport(config);
+        configuredConfigGroups = Configurator.getConfigGroups(config);
     }
 
     @Override
