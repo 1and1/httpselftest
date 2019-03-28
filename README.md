@@ -137,7 +137,7 @@ If you have a `web.xml` you can register it there.
 ## Configuration
 |  Servlet init parameter | Description | Default value |
 |---|---| --- |
-| `selftest.user.colon.password` | Credentials for HTTP Basic authentication | no authentication |
+| `selftest.credentials` | Credentials for HTTP Basic authentication. Supports plain or SHA-256 (prefix with `plain|` or `sha256|`). | no authentication |
 | `selftest.logger` | Logging framework to be used for log message extraction. Possible values: `[none, logback]` | `logback` |
 | `selftest.configgroups` | Config groups can be used to filter out pre-defined configs that are irrelevant to the current environment. The values will be matched against the current hostname. Example: `"local, staging"`. Check the example application for usage. | no groups |
 | `selftest.override.port` | Override for application port. Necessary if the httpselftest servlet runs on another port. | application port |
