@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [0.2.2] - 2019-03-28
+- fix artifact deployment to sonatype
+
 ## [0.2.1] - 2019-03-28
 ### Added
 - Support SHA-256 for Basic auth. Use by prefixing credentials with `sha256|`, e.g. `selftest.credentials=sha256|a60ec1cf58f49cd2fab6d9e...`.
