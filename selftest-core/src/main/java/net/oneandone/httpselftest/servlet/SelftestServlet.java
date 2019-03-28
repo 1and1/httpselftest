@@ -8,9 +8,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -95,7 +93,7 @@ public abstract class SelftestServlet extends HttpServlet {
 
     private void handleRequest(HttpServletRequest req, HttpServletResponse resp, Consumer<SelfTestWriter> businessLogic)
             throws IOException {
-        if (!isAuthorized(req)) {
+        if (!Authorization.isOk(req, configuredCredentials)) {
             resp.setStatus(401);
             resp.setHeader("WWW-Authenticate", "Basic");
             return;
@@ -209,21 +207,6 @@ public abstract class SelftestServlet extends HttpServlet {
     private static String servletName(HttpServletRequest req) {
         String requestURI = req.getRequestURI();
         return requestURI.substring(requestURI.lastIndexOf('/') + 1);
-    }
-
-    private boolean isAuthorized(HttpServletRequest req) {
-        if (!configuredCredentials.isPresent()) {
-            return true;
-        }
-        String authorization = req.getHeader("Authorization");
-        if (authorization == null || !authorization.startsWith("Basic ")) {
-            return false;
-        }
-
-        String credentialsB64 = authorization.substring("Basic ".length()).trim();
-        byte[] decodedBytes = Base64.getMimeDecoder().decode(credentialsB64);
-        String credentials = new String(decodedBytes, Charset.forName("UTF-8"));
-        return credentials.equals(configuredCredentials.get());
     }
 
     private static void executeWritingUncaughtExceptions(HttpServletResponse resp, SelfTestWriter writer,

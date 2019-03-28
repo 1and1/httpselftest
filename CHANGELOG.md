@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
+### Added
+- Add SHA-256 support for Basic auth credentials. Use by prefixing credentials with 'sha256|', e.g. 'selftest.credentials=sha256|a60ec1cf58f49cd2fab6d9e...'.
 
 ## [0.2.0] - 2019-02-22
 ### Added
