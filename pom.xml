@@ -5,7 +5,7 @@
 
     <groupId>net.oneandone.httpselftest</groupId>
     <artifactId>selftest-parent</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.2.2</version>
     <packaging>pom</packaging>
 
     <modules>
