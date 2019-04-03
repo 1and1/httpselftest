@@ -2,7 +2,6 @@ package net.oneandone.httpselftest.servlet;
 
 import static net.oneandone.httpselftest.writer.SelftestHtmlWriter.CONFIG_ID;
 import static net.oneandone.httpselftest.writer.SelftestHtmlWriter.EXECUTE;
-import static net.oneandone.httpselftest.writer.SelftestHtmlWriter.PARAMETER_PREFIX;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -47,9 +46,11 @@ public abstract class SelftestServlet extends HttpServlet {
     public static final String PROP_OVERRIDE_PATH = "selftest.override.contextpath";
     public static final String PROP_OVERRIDE_MDC_KEY = "selftest.override.mdckey";
 
-    private final ReentrantLock lock = new ReentrantLock();
+    public static final String PARAMETER_PREFIX = "p-";
 
-    // fields synchronized by "lock"
+    private final ReentrantLock requestLock = new ReentrantLock();
+
+    // fields synchronized by "requestLock"
     private Instant lastTestrunStart = null;
     private String lastTestrunIp = null;
 
@@ -109,11 +110,11 @@ public abstract class SelftestServlet extends HttpServlet {
             resp.addHeader("Content-Type", "text/html; charset=UTF-8");
         }
 
-        if (lock.tryLock()) {
+        if (requestLock.tryLock()) {
             try {
                 executeWritingUncaughtExceptions(resp, writer, businessLogic);
             } finally {
-                lock.unlock();
+                requestLock.unlock();
             }
         } else {
             writer.writeText("The selftest servlet is currently in use. "
@@ -137,7 +138,7 @@ public abstract class SelftestServlet extends HttpServlet {
         final TestConfigs configs = getConfigs();
         final String callerIp = req.getRemoteAddr();
 
-        final TestConfigs.Values testParams = configs.create(extractValuesFromRequest(req));
+        final TestConfigs.Values testParams = extractParamsFromRequest(req, configs);
         final String appUrl = determineAppBaseUrl(req);
 
         if (req.getParameter(EXECUTE) != null) {
@@ -242,21 +243,28 @@ public abstract class SelftestServlet extends HttpServlet {
 
     private static TestConfigs.Values determineValuesForGet(HttpServletRequest req, final TestConfigs configs) {
         final String configId = req.getParameter(CONFIG_ID);
-        return configId == null ? configs.createEmpty() : configs.get(configId);
+        if (configId == null || !configs.getIds().contains(configId)) {
+            return configs.createEmpty();
+        } else {
+            return configs.getValues(configId);
+        }
     }
 
-    private static Map<String, String> extractValuesFromRequest(HttpServletRequest req) {
+    private static TestConfigs.Values extractParamsFromRequest(HttpServletRequest req, final TestConfigs configs) {
+        String configId = req.getParameter(CONFIG_ID);
+
         Map<String, String> testParams = new HashMap<>();
-
-        Set<String> keySet = req.getParameterMap().keySet();
-
-        for (String key : keySet) {
+        for (String key : req.getParameterMap().keySet()) {
             if (key.startsWith(PARAMETER_PREFIX)) {
                 testParams.put(key.substring(PARAMETER_PREFIX.length()), req.getParameter(key));
             }
         }
 
-        return testParams;
+        if (configId == null || !configs.getIds().contains(configId)) {
+            return configs.create(testParams);
+        } else {
+            return configs.create(configId, testParams);
+        }
     }
 
 }

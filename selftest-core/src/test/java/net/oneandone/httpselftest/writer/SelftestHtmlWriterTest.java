@@ -139,9 +139,14 @@ public class SelftestHtmlWriterTest {
     @Test
     public void testParametersForm_silent() {
         TestConfigs configs = new TestConfigs("param1", "param2");
+        configs.put("cid", "val1", "val2");
 
         String noParams = writer.testParametersForm(configs, configs.createEmpty(), "servletName").render();
-        assertThat(noParams).contains("method=\"POST\"", "action=\"servletName\"", "p-param1", "p-param2");
+        assertThat(noParams).contains("method=\"POST\"", "action=\"servletName\"", "p-param1", "p-param2",
+                "name=\"config-id\" value=\"\"");
+
+        String fromConfig = writer.testParametersForm(configs, configs.getValues("cid"), "servletName").render();
+        assertThat(fromConfig).contains("name=\"config-id\" value=\"cid\"");
 
         HashMap<String, String> hashMap = new HashMap<>();
         hashMap.put("param1", "value1");
@@ -156,16 +161,17 @@ public class SelftestHtmlWriterTest {
         configs.put("config_1", "value1", "value2", "value3");
         configs.put("config_2", "value1", "value2", "value3");
 
-        Optional<DomContent> noConfigs = writer.providedConfigsForm(new TestConfigs(), setOf());
+        Optional<DomContent> noConfigs = writer.providedConfigsForm(new TestConfigs(), setOf(), "");
         assertThat(noConfigs).isNotPresent();
 
-        String noIdsRelevant = writer.providedConfigsForm(configs, setOf()).get().render();
-        assertThat(noIdsRelevant).contains("relevantMarkets", "config-id", "config_1").doesNotContain("otherMarkets");
+        String noIdsRelevant = writer.providedConfigsForm(configs, setOf(), "").get().render();
+        assertThat(noIdsRelevant).contains("relevantMarkets", "config-id", "config_1").doesNotContain("otherMarkets",
+                "activeConfigId");
 
-        String someIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1")).get().render();
-        assertThat(someIdsIrrelevant).contains("relevantMarkets", "otherMarkets");
+        String someIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1"), "config_1").get().render();
+        assertThat(someIdsIrrelevant).contains("relevantMarkets", "otherMarkets", "activeConfigId");
 
-        String noIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1", "config_2")).get().render();
+        String noIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1", "config_2"), "").get().render();
         assertThat(noIdsIrrelevant).contains("relevantMarkets").doesNotContain("otherMarkets");
     }
 

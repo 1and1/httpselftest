@@ -14,6 +14,7 @@ import static j2html.TagCreator.tr;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static net.oneandone.httpselftest.servlet.SelftestServlet.PARAMETER_PREFIX;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -57,8 +58,6 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     public static final String EXECUTE = "execute";
 
-    public static final String PARAMETER_PREFIX = "p-";
-
     public static final String CONFIG_ID = "config-id";
 
     static final long SECONDS_PER_MINUTE = 60;
@@ -92,7 +91,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeTestcaseToggleScript();
         write(metainfoBlock(testsBaseUrl, lastTestRun, callerIp, lastTestrunIp));
         write(testParametersForm(configs, paramsToUse, servletName));
-        providedConfigsForm(configs, relevantConfigIds).ifPresent(this::write);
+        providedConfigsForm(configs, relevantConfigIds, paramsToUse.getConfigId()).ifPresent(this::write);
         write(div().withClass("clear"));
     }
 
@@ -111,7 +110,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     @Override
     public void writeTestOutcome(TestRunData testRun, List<LogDetails> logs, SimpleContext ctx) {
-        // TODO remove foreign logs logic?
+        // TODO remove foreign logs logic? should be impossible now with runId separation.
         boolean hasForeignLogs = hasLogEvent(logs, (evt, renderer) -> !testRun.runId.equals(evt.runId));
         boolean hasErrorLogs = hasLogEvent(logs, (evt, renderer) -> renderer.getLevel(evt.event).equals("ERROR"));
         boolean hasWarnLogs = hasLogEvent(logs, (evt, renderer) -> renderer.getLevel(evt.event).equals("WARN"));
@@ -187,6 +186,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  #params, #configs { float: left; }");
         writeDirect("  #configs table { float: left; }");
         writeDirect("  #configs table.otherMarkets input { color: #666; }");
+        writeDirect("  #configs .activeConfigId { box-shadow: 0 0 0 2px #3a3; }"); // green
         writeDirect("  .clear { clear: both; }");
         writeDirect("  .group { margin: 12px 0px; padding: 4px 6px; background-color: #222; color: #bbb; "
                 + " border-radius: 3px; }");
@@ -203,11 +203,11 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  .indicator-inactive { display: none; }");
         writeDirect("  .indicator { float: right; border-radius: 3px; margin: 0 2px; "
                 + "padding: 2px 8px; line-height: 16px; font-size: 16px; color: black; }");
-        writeDirect("  .indicator.foreignlogs { background-color: #034cde; }");
+        writeDirect("  .indicator.foreignlogs { background-color: #034cde; }"); // blue
         writeDirect("  .indicator.errorlogs { background-color: var(--darkred); }");
         writeDirect("  .indicator.warnlogs { background-color: var(--darkorange); }");
         writeDirect("  .indicator.slowresponse { background-color: grey; }");
-        writeDirect("  .indicator.logoverflow { background-color: #b610b6; }");
+        writeDirect("  .indicator.logoverflow { background-color: #b610b6; }"); // purple
         writeDirect("  div.mono > div > * { text-indent: -20px; display: inline-block; margin-left: 20px; }");
         writeDirect("  .js .group div.contents { display: none; }");
         writeDirect("  .js .group.open div.contents { display: block; }");
@@ -265,11 +265,12 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                                 text(name), //
                                 input().withType("text").withName(PARAMETER_PREFIX + name).withValue(paramsToUse.get(name))))
                                 .toArray(ContainerTag[]::new)), //
+                        input().withCondHidden(true).withName(CONFIG_ID).withValue(paramsToUse.getConfigId()), //
                         input().withType(SUBMIT).withName(EXECUTE).withValue("Run tests") //
                 ));
     }
 
-    Optional<DomContent> providedConfigsForm(TestConfigs configs, Set<String> configIdsForCurrentMarket) {
+    Optional<DomContent> providedConfigsForm(TestConfigs configs, Set<String> configIdsForCurrentMarket, String activeConfigId) {
         if (configs.isEmpty()) {
             return Optional.empty();
         }
@@ -287,9 +288,9 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
         ContainerTag form = form().withMethod("GET").with( //
                 div("Available pre-defined parameter sets for this application. Click to transfer values into form:"), //
-                configsTableAsDom(firstClassIds, "relevantMarkets"));
+                configsTableAsDom(firstClassIds, "relevantMarkets", activeConfigId));
         if (!secondClassIds.isEmpty()) {
-            form.with(configsTableAsDom(secondClassIds, "otherMarkets"));
+            form.with(configsTableAsDom(secondClassIds, "otherMarkets", activeConfigId));
         }
 
         return Optional.of(div().withId("configs").withClass("block").with(form));
@@ -441,7 +442,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return joined;
     }
 
-    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className) {
+    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className, String activeConfigId) {
         if (idsToWrite.isEmpty()) {
             throw new IllegalStateException("called configsTable with 0 ids");
         }
@@ -450,7 +451,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return table().withClass(className).with( //
                 idsByFirstChar.keySet().stream().sorted().map(firstChar -> //
                 row(idsByFirstChar.get(firstChar).stream().sorted().map(id -> //
-                input().withType(SUBMIT).withName(CONFIG_ID).withValue(id) //
+                input().withType(SUBMIT).withName(CONFIG_ID).withValue(id).withCondClass(id.equals(activeConfigId),
+                        "activeConfigId") //
                 ).toArray(DomContent[]::new)) //
                 ).toArray(ContainerTag[]::new) //
         );

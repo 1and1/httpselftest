@@ -32,6 +32,13 @@ public class TestConfigs {
         configsMap = new HashMap<>();
     }
 
+    public Values create(String configId, Map<String, String> parameterMap) {
+        assertThat(configId != null, "Config id must not be null.");
+        assertThat(getIds().contains(configId), "Unknown config id: " + configId);
+
+        return new Values(configId, parameterMap);
+    }
+
     public Values create(Map<String, String> parameterMap) {
         return new Values(parameterMap);
     }
@@ -54,7 +61,7 @@ public class TestConfigs {
             map.put(parameterNames.get(i), parameterValues[i]);
         }
 
-        configsMap.put(id, new Values(map));
+        configsMap.put(id, new Values(id, map));
     }
 
     public List<String> getParameterNames() {
@@ -66,7 +73,7 @@ public class TestConfigs {
         return unmodifiableSet(backedKeys);
     }
 
-    public Values get(String configId) {
+    public Values getValues(String configId) {
         assertThat(configId != null, "Illegal config id: null");
         final Values config = configsMap.get(configId);
         assertThat(config != null, "Config with id '" + configId + "' not found.");
@@ -80,7 +87,14 @@ public class TestConfigs {
     public class Values implements TestValues {
         private final Map<String, String> parameterMap;
 
+        private final String configId;
+
         private Values(Map<String, String> testParams) {
+            this("", testParams);
+        }
+
+        private Values(String configId, Map<String, String> testParams) {
+            assertThat(configId != null, "Illegal Config id: null");
             assertThat(testParams.size() == parameterNames.size(),
                     "Invalid number of parameter values. Expected " + parameterNames.size() + ", got " + testParams.size() + ".");
             for (Entry<String, String> entry : testParams.entrySet()) {
@@ -88,6 +102,7 @@ public class TestConfigs {
                 assertThat(parameterNames.contains(entry.getKey()), "Trying to set unknown parameter '" + entry.getKey() + "'.");
             }
 
+            this.configId = configId;
             parameterMap = new HashMap<>(testParams);
         }
 
@@ -95,6 +110,10 @@ public class TestConfigs {
         public String get(String name) {
             assertThat(parameterNames.contains(name), "Unknown parameter name '" + name + "'.");
             return parameterMap.get(name);
+        }
+
+        public String getConfigId() {
+            return configId;
         }
 
     }
