@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -74,7 +73,7 @@ public class TestConfigs {
     }
 
     public Values getValues(String configId) {
-        assertThat(configId != null, "Illegal config id: null");
+        assertThat(configId != null, "Config id must not be null.");
         final Values config = configsMap.get(configId);
         assertThat(config != null, "Config with id '" + configId + "' not found.");
         return config;
@@ -94,16 +93,18 @@ public class TestConfigs {
         }
 
         private Values(String configId, Map<String, String> testParams) {
-            assertThat(configId != null, "Illegal Config id: null");
-            assertThat(testParams.size() == parameterNames.size(),
-                    "Invalid number of parameter values. Expected " + parameterNames.size() + ", got " + testParams.size() + ".");
-            for (Entry<String, String> entry : testParams.entrySet()) {
-                assertThat(entry.getValue() != null, "Illegal parameter value: null");
-                assertThat(parameterNames.contains(entry.getKey()), "Trying to set unknown parameter '" + entry.getKey() + "'.");
-            }
+            assertThat(configId != null, "Config id must not be null.");
+            assertThat(testParams != null, "Parameter map must not be null.");
 
             this.configId = configId;
-            parameterMap = new HashMap<>(testParams);
+
+            Map<String, String> processedParams = new HashMap<>();
+            parameterNames.forEach(name -> {
+                String value = testParams.getOrDefault(name, "");
+                assertThat(value != null, "Parameter '" + name + "' must not be null");
+                processedParams.put(name, value);
+            });
+            parameterMap = new HashMap<>(processedParams);
         }
 
         @Override

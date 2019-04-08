@@ -1,8 +1,9 @@
 package net.oneandone.httpselftest.test.api;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyMap;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,70 +26,70 @@ public class TestConfigsTest {
         new TestConfigs("a", "b");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void new_testconfigs_null_array() {
-        new TestConfigs((String[]) null);
+        assertThatThrownBy(() -> new TestConfigs((String[]) null)).hasMessageContaining("must not be null");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void new_testconfigs_null_null() {
-        new TestConfigs(null, null);
+        assertThatThrownBy(() -> new TestConfigs(null, null)).hasMessageContaining("must not be null");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void new_testconfigs_duplicate() {
-        new TestConfigs("a", "a");
+        assertThatThrownBy(() -> new TestConfigs("a", "a")).hasMessageContaining("must be unique");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void add_null_id() {
+    @Test
+    public void put_nullId() {
         TestConfigs c = new TestConfigs("a");
-        c.put(null, "va");
+        assertThatThrownBy(() -> c.put(null, "va")).hasMessageContaining("must not be null");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void add_null_array() {
+    @Test
+    public void put_nullArray() {
         TestConfigs c = new TestConfigs("p1");
-        c.put("c1", (String[]) null);
+        assertThatThrownBy(() -> c.put("c1", (String[]) null)).hasMessageContaining("must not be null");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void add_null_values() {
+    @Test
+    public void put_nullValue() {
         TestConfigs c = new TestConfigs("p1", "p2");
-        c.put("c1", "v1", null);
+        assertThatThrownBy(() -> c.put("c1", "v1", null)).hasMessageContaining("must not be null").hasMessageContaining("'p2'");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void add_duplicate_id() {
+    @Test
+    public void put_duplicateId() {
         TestConfigs c = new TestConfigs("a");
         c.put("a", "va");
-        c.put("a", "va");
+        assertThatThrownBy(() -> c.put("a", "va")).hasMessageContaining("already exists");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void add_tooShort() {
+    @Test
+    public void put_notEnoughValues() {
         TestConfigs c = new TestConfigs("p1", "p2");
-        c.put("c1", "v1");
+        assertThatThrownBy(() -> c.put("c1", "v1")).hasMessageContaining("number of parameter values");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void add_tooLong() {
+    @Test
+    public void put_tooManyValues() {
         TestConfigs c = new TestConfigs("p1", "p2");
-        c.put("c1", "v1", "v2", "v3");
+        assertThatThrownBy(() -> c.put("c1", "v1", "v2", "v3")).hasMessageContaining("number of parameter values");
     }
 
     @Test
     public void testconfigs_isEmpty() {
         TestConfigs c = new TestConfigs("a");
-        assertTrue(c.isEmpty());
+        assertThat(c.isEmpty()).as("should be empty").isTrue();
         c.put("a", "va");
-        assertFalse(c.isEmpty());
+        assertThat(c.isEmpty()).as("should not be empty").isFalse();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testconfigs_get_null() {
+    @Test
+    public void testconfigs_getNull() {
         TestConfigs c = new TestConfigs("a");
-        c.getValues(null);
+        assertThatThrownBy(() -> c.getValues(null)).hasMessageContaining("must not be null");
     }
 
     @Test
@@ -98,11 +99,12 @@ public class TestConfigsTest {
         c.getValues("c1");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testconfigs_get_notexists() {
         TestConfigs c = new TestConfigs("p1");
         c.put("c1", "v1");
-        c.getValues("c2");
+
+        assertThatThrownBy(() -> c.getValues("c2")).hasMessageContaining("not found");
     }
 
     @Test
@@ -111,7 +113,7 @@ public class TestConfigsTest {
         c.put("c1", "v1");
         c.put("c2", "v2");
         c.put("c3", "v3");
-        assertThat(c.getIds(), is(new HashSet<String>(Arrays.asList("c1", "c2", "c3"))));
+        assertThat(c.getIds()).isEqualTo((new HashSet<String>(asList("c1", "c2", "c3"))));
     }
 
     @Test
@@ -119,23 +121,34 @@ public class TestConfigsTest {
         TestConfigs c = new TestConfigs("p1");
         c.put("c1", "v1");
         c.put("c2", "v2");
-        assertThat(c.getValues("c1").getConfigId(), is("c1"));
-        assertThat(c.getValues("c2").getConfigId(), is("c2"));
+        assertThat(c.getValues("c1").getConfigId()).isEqualTo("c1");
+        assertThat(c.getValues("c2").getConfigId()).isEqualTo("c2");
     }
 
     @Test
-    public void createConfig_unknownId() throws Exception {
-        assertThatThrownBy(() -> {
-            TestConfigs c = new TestConfigs("p1");
-            c.put("c1", "v1");
-            c.create("c2", Collections.emptyMap());
-        }).hasMessageContaining("Unknown config id:");
+    public void createWithId_nullId() {
+        TestConfigs c = new TestConfigs("p1");
+        assertThatThrownBy(() -> c.create(null, emptyMap())).hasMessageContaining("must not be null");
+    }
+
+    @Test
+    public void createWithId_unknownId() throws Exception {
+        TestConfigs c = new TestConfigs("p1");
+        c.put("c1", "v1");
+        assertThatThrownBy(() -> c.create("c2", emptyMap())).hasMessageContaining("Unknown config id");
+    }
+
+    @Test
+    public void createWithId() throws Exception {
+        TestConfigs c = new TestConfigs("p1");
+        c.put("c1", "v1");
+        c.create("c1", emptyMap());
     }
 
     @Test
     public void getParameterNames() {
         TestConfigs c = new TestConfigs("p1", "p2");
-        assertThat(c.getParameterNames(), is(Arrays.asList("p1", "p2")));
+        assertThat(c.getParameterNames()).isEqualTo(asList("p1", "p2"));
     }
 
     @Test
@@ -145,84 +158,73 @@ public class TestConfigsTest {
         c.put("c2", "v3", "v4");
         Values values = c.getValues("c1");
 
-        assertThat(c.getValues("c1").get("p1"), is("v1"));
-        assertThat(c.getValues("c1").get("p2"), is("v2"));
-        assertThat(c.getValues("c2").get("p1"), is("v3"));
-        assertThat(c.getValues("c2").get("p2"), is("v4"));
+        assertThat(c.getValues("c1").get("p1")).isEqualTo("v1");
+        assertThat(c.getValues("c1").get("p2")).isEqualTo("v2");
+        assertThat(c.getValues("c2").get("p1")).isEqualTo("v3");
+        assertThat(c.getValues("c2").get("p2")).isEqualTo("v4");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void values_get_unknownParameter() {
         TestConfigs c = new TestConfigs("p1");
         c.put("c1", "v1");
         Values values = c.getValues("c1");
-        values.get("p2");
+        assertThatThrownBy(() -> values.get("p2")).hasMessageContaining("Unknown parameter");
+
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void values_get_null() {
         TestConfigs c = new TestConfigs("p1");
         c.put("c1", "v1");
         Values values = c.getValues("c1");
-        values.get(null);
+        assertThatThrownBy(() -> values.get(null)).hasMessageContaining("Unknown parameter name");
     }
 
     @Test
     public void createEmpty() {
         TestConfigs c = new TestConfigs("p1");
         Values v = c.createEmpty();
-        assertThat(v.get("p1"), is(""));
+        assertThat(v.get("p1")).isEqualTo("");
     }
 
     @Test
     public void create_ok() {
         TestConfigs c = new TestConfigs("p1", "p2");
-        Map<String, String> map = new HashMap<>();
-        map.put("p1", "v1");
-        map.put("p2", "v2");
-        c.create(map);
+        Map<String, String> params = new HashMap<>();
+        params.put("p1", "v1");
+        params.put("p2", "v2");
+        c.create(params);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void create_null_id() {
+    @Test
+    public void create_nullMap() throws Exception {
         TestConfigs c = new TestConfigs("p1");
-        Map<String, String> map = new HashMap<>();
-        map.put(null, "v1");
-        c.create(map);
+        assertThatThrownBy(() -> c.create(null)).hasMessageContaining("must not be null");
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_null_value() {
         TestConfigs c = new TestConfigs("p1");
-        Map<String, String> map = new HashMap<>();
-        map.put("p1", null);
-        c.create(map);
+        Map<String, String> params = new HashMap<>();
+        params.put("p1", null);
+        assertThatThrownBy(() -> c.create(params)).hasMessageContaining("must not be null").hasMessageContaining("'p1'");
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void create_unknownParameter() {
+    @Test
+    public void create_unknownParameter_isIgnored() {
         TestConfigs c = new TestConfigs("p1");
-        Map<String, String> map = new HashMap<>();
-        map.put("p2", "v2");
-        c.create(map);
+        Map<String, String> params = new HashMap<>();
+        params.put("p2", "v2");
+        c.create(params);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void create_notAllParameters() {
+    @Test
+    public void create_missingParameter_usesDefaultValue() {
         TestConfigs c = new TestConfigs("p1", "p2");
-        Map<String, String> map = new HashMap<>();
-        map.put("p2", "v2");
-        c.create(map);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void create_tooManyParameters() {
-        TestConfigs c = new TestConfigs("p1", "p2");
-        Map<String, String> map = new HashMap<>();
-        map.put("p1", "v1");
-        map.put("p2", "v2");
-        map.put("p3", "v3");
-        c.create(map);
+        Map<String, String> params = new HashMap<>();
+        params.put("p2", "v2");
+        assertThat(c.create(params).get("p1")).isEqualTo("");
     }
 
 }
