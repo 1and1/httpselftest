@@ -17,34 +17,58 @@ import java.util.Set;
  */
 public class TestConfigs {
 
-    private final List<String> parameterNames;
+    private final List<String> allParameterNames;
+
+    private List<String> fixedParameterNames = Collections.emptyList();
+    private boolean fixed = false;
 
     private final Map<String, Values> configsMap;
 
+    // FIXME switch to builder
     public TestConfigs(String... parameterNamesArray) {
-        assertThat(parameterNamesArray != null, "Parameter names must not be null.");
-        parameterNames = Collections.unmodifiableList(Arrays.asList(parameterNamesArray));
-        final Set<String> parameterSet = new HashSet<>(parameterNames);
+        assertThat(parameterNamesArray != null, "Parameter names array must not be null.");
+        allParameterNames = Collections.unmodifiableList(Arrays.asList(parameterNamesArray));
+        final Set<String> parameterSet = new HashSet<>(allParameterNames);
 
         assertThat(!parameterSet.contains(null), "Parameter names must not be null.");
-        assertThat(parameterNames.size() == parameterSet.size(), "Parameter names must be unique.");
+        assertThat(!parameterSet.contains(""), "Parameter names must not be empty.");
+        assertThat(allParameterNames.size() == parameterSet.size(), "Parameter names must be unique.");
 
         configsMap = new HashMap<>();
     }
 
+    public void fixed(String... parameterNamesArray) {
+        assertThat(fixed == false, "Fixed parameters already set.");
+        assertThat(configsMap.isEmpty(), "Fixed parameters must be set before adding values.");
+        this.fixed = true;
+
+        assertThat(parameterNamesArray != null, "Fixed parameter names array must not be null.");
+        assertThat(parameterNamesArray.length > 0, "Fixed parameter names array must not be empty.");
+        fixedParameterNames = Collections.unmodifiableList(Arrays.asList(parameterNamesArray));
+        final Set<String> parameterSet = new HashSet<>(fixedParameterNames);
+
+        assertThat(!parameterSet.contains(null), "Fixed parameter names must not be null.");
+        assertThat(!parameterSet.contains(""), "Fixed parameter names must not be empty.");
+        assertThat(fixedParameterNames.size() == parameterSet.size(), "Fixed parameter names must be unique.");
+        assertThat(allParameterNames.containsAll(parameterSet), "Fixed parameter unknown.");
+    }
+
     public Values create(String activeConfigId, Map<String, String> parameterMap) {
         assertThat(activeConfigId != null, "Config id must not be null.");
-        assertThat(getIds().contains(activeConfigId), "Unknown config id: " + activeConfigId);
+        assertThat(configsMap.containsKey(activeConfigId), "Unknown config id: " + activeConfigId);
+        assertThat(parameterMap != null, "Parameter map must not be null.");
 
-        return new Values(Optional.of(activeConfigId), parameterMap);
+        return new Values(Optional.of(activeConfigId), parameterMap, configsMap.get(activeConfigId).parameterMap);
     }
 
     public Values create(Map<String, String> parameterMap) {
+        assertThat(parameterMap != null, "Parameter map must not be null.");
+
         return new Values(parameterMap);
     }
 
     public Values createEmpty() {
-        return new Values(parameterNames.stream().collect(toMap(name -> name, name -> "")));
+        return new Values(allParameterNames.stream().collect(toMap(name -> name, name -> "")));
     }
 
     public void put(String id, String... parameterValues) {
@@ -52,20 +76,20 @@ public class TestConfigs {
         assertThat(!configsMap.containsKey(id), "Config for id '" + id + "' already exists.");
         assertThat(parameterValues != null, "Parameter values must not be null.");
         @SuppressWarnings("null")
-        boolean correctSize = parameterValues.length == parameterNames.size();
-        assertThat(correctSize, "Invalid number of parameter values. Expected " + parameterNames.size() + ", got "
+        boolean correctSize = parameterValues.length == allParameterNames.size();
+        assertThat(correctSize, "Invalid number of parameter values. Expected " + allParameterNames.size() + ", got "
                 + parameterValues.length + ".");
 
         Map<String, String> map = new HashMap<>();
         for (int i = 0; i < parameterValues.length; i++) {
-            map.put(parameterNames.get(i), parameterValues[i]);
+            map.put(allParameterNames.get(i), parameterValues[i]);
         }
 
-        configsMap.put(id, new Values(Optional.of(id), map));
+        configsMap.put(id, new Values(Optional.of(id), map, map));
     }
 
     public List<String> getParameterNames() {
-        return parameterNames;
+        return allParameterNames;
     }
 
     public Set<String> getIds() {
@@ -90,32 +114,43 @@ public class TestConfigs {
         private final Optional<String> activeConfigId;
 
         private Values(Map<String, String> testParams) {
-            this(Optional.empty(), testParams);
+            this(Optional.empty(), testParams, Collections.emptyMap());
         }
 
-        private Values(Optional<String> activeConfigId, Map<String, String> testParams) {
-            assertThat(activeConfigId != null, "Config id must not be null.");
-            assertThat(testParams != null, "Parameter map must not be null.");
+        private Values(Optional<String> activeConfigId, Map<String, String> testParams, Map<String, String> fixedParams) {
+            assertThat(activeConfigId != null, "Config id must not be null."); // should be handled above
+            assertThat(testParams != null, "Parameter map must not be null."); // should be handled above
+            assertThat(fixedParams != null, "Fixed parameter map must not be null."); // should be handled above
 
             this.activeConfigId = activeConfigId;
 
             Map<String, String> processedParams = new HashMap<>();
-            parameterNames.forEach(name -> {
-                String value = testParams.getOrDefault(name, "");
-                assertThat(value != null, "Parameter '" + name + "' must not be null");
-                processedParams.put(name, value);
+
+            allParameterNames.forEach(name -> {
+                if (fixedParameterNames.contains(name)) {
+                    String fixedValue = Optional.ofNullable(fixedParams.get(name)).orElse("");
+                    processedParams.put(name, fixedValue);
+                } else {
+                    String value = testParams.getOrDefault(name, "");
+                    assertThat(value != null, "Parameter '" + name + "' must not be null.");
+                    processedParams.put(name, value);
+                }
             });
             parameterMap = new HashMap<>(processedParams);
         }
 
         @Override
         public String get(String name) {
-            assertThat(parameterNames.contains(name), "Unknown parameter name '" + name + "'.");
+            assertThat(allParameterNames.contains(name), "Unknown parameter name '" + name + "'.");
             return parameterMap.get(name);
         }
 
         public Optional<String> activeConfigId() {
             return activeConfigId;
+        }
+
+        public List<String> getFixedParameterNames() {
+            return fixedParameterNames;
         }
 
     }

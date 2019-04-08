@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.Period;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -76,7 +77,7 @@ public class SelftestHtmlWriterTest {
         Set<String> relevantConfigIds = new HashSet<>();
         relevantConfigIds.add("live relevant");
         relevantConfigIds.add("qs relevant");
-        Values paramsToUse = configs.createEmpty();
+        Values paramsToUse = configs.create("qs relevant", Collections.emptyMap());
         String servletName = "servletName";
         String testsBaseUrl = "some base URL";
         Instant lastTestRun = Instant.now();
@@ -89,6 +90,7 @@ public class SelftestHtmlWriterTest {
 
     static TestConfigs someTestConfigs() {
         TestConfigs testConfigs = new TestConfigs("param1", "param2", "param3");
+        testConfigs.fixed("param3");
         testConfigs.put("live relevant", "value1", "value2", "value3");
         testConfigs.put("qs relevant", "value1", "value2", "value3");
         testConfigs.put("live other", "value1", "value2", "value3");
@@ -146,13 +148,22 @@ public class SelftestHtmlWriterTest {
                 "name=\"config-id\" value=\"\"");
 
         String fromConfig = writer.testParametersForm(configs, configs.getValues("cid"), "servletName").render();
-        assertThat(fromConfig).contains("name=\"config-id\" value=\"cid\"");
+        assertThat(fromConfig).contains("name=\"config-id\" value=\"cid\"").doesNotContain("readonly");
 
-        HashMap<String, String> hashMap = new HashMap<>();
-        hashMap.put("param1", "value1");
-        hashMap.put("param2", "<>\"");
-        String someParams = writer.testParametersForm(configs, configs.create(hashMap), "servletName").render();
-        assertThat(someParams).contains("value=\"value1\"", "value=\"&lt;&gt;&quot;\"");
+        HashMap<String, String> params = new HashMap<>();
+        params.put("param1", "value1");
+        params.put("param2", "<>\"");
+        String fromParams = writer.testParametersForm(configs, configs.create(params), "servletName").render();
+        assertThat(fromParams).contains("value=\"value1\"", "value=\"&lt;&gt;&quot;\"");
+    }
+
+    @Test
+    public void testParametersForm_fixed_silent() {
+        TestConfigs fixed = new TestConfigs("param1");
+        fixed.fixed("param1");
+
+        String withFixed = writer.testParametersForm(fixed, fixed.createEmpty(), "servletName").render();
+        assertThat(withFixed).contains("readonly=\"true\"", "class=\"fixed\"");
     }
 
     @Test

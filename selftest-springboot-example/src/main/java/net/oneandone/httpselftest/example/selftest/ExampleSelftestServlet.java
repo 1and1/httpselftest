@@ -22,14 +22,17 @@ import net.oneandone.httpselftest.test.util.RequestHelper;
 
 public class ExampleSelftestServlet extends SelftestServlet {
 
+    private static final String P_FIXED = "fixed";
+
     @Override
     protected TestConfigs getConfigs() {
 
-        TestConfigs configs = new TestConfigs(FIRSTNAME, LASTNAME);
-        configs.put("someconfig local", "stephen", "colbert");
-        configs.put("otherconfig local", "stephen", "hillenburg");
-        configs.put("someconfig staging", "calvin", "hobbes");
-        configs.put("otherconfig staging", "ellen", "ripley");
+        TestConfigs configs = new TestConfigs(FIRSTNAME, LASTNAME, P_FIXED);
+        configs.fixed(P_FIXED);
+        configs.put("someconfig local", "stephen", "colbert", "");
+        configs.put("otherconfig local", "stephen", "hillenburg", "");
+        configs.put("someconfig staging", "calvin", "hobbes", "");
+        configs.put("otherconfig staging", "ellen", "ripley", "meow");
         return configs;
     }
 
@@ -49,7 +52,7 @@ public class ExampleSelftestServlet extends SelftestServlet {
         @Override
         public TestRequest prepareRequest(TestValues config, Context ctx) throws Exception {
             StringJoiner join = new StringJoiner("&");
-            RequestHelper.addFormParamsUtf8(join, config, FIRSTNAME, LASTNAME);
+            RequestHelper.addFormParamsUtf8(join, config, FIRSTNAME, LASTNAME, P_FIXED);
 
             Map<String, String> headers = new HashMap<>();
             headers.put("Content-Type", MediaType.APPLICATION_FORM_URLENCODED);

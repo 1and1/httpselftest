@@ -177,6 +177,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  h2 { margin: 5px; font-size: 19px; }");
         writeDirect("  input { padding: 3px; margin: 1px 3px; border: 0; background-color: #202020; color: #bbb; "
                 + " border-radius: 3px; }");
+        writeDirect("  .fixed { color: #999; }");
+        writeDirect("  input[readonly] { color: #666; }");
         writeDirect("  input[type=submit] { padding: 4px 7px; cursor: pointer; }");
         writeDirect("  .block { margin-bottom: 10px; }");
         writeDirect("  div.mono span { white-space: pre-wrap; word-break: break-all; }");
@@ -258,12 +260,15 @@ public class SelftestHtmlWriter extends SelfTestWriter {
     }
 
     DomContent testParametersForm(TestConfigs configs, TestConfigs.Values paramsToUse, String servletName) {
+        List<String> fixedParams = paramsToUse.getFixedParameterNames();
         return div().withId("params").withClass("block").with( //
                 form().withMethod("POST").withAction(servletName).with( //
                         text("Test parameters:"), //
                         table(configs.getParameterNames().stream().map(name -> row( //
-                                text(name), //
-                                input().withType("text").withName(PARAMETER_PREFIX + name).withValue(paramsToUse.get(name))))
+                                span(name).withCondClass(fixedParams.contains(name), "fixed"), //
+                                input().withType("text").withName(PARAMETER_PREFIX + name)
+                                        .condAttr(fixedParams.contains(name), "readonly", "true")
+                                        .withValue(paramsToUse.get(name))))
                                 .toArray(ContainerTag[]::new)), //
                         input().withCondHidden(true).withName(CONFIG_ID).withValue(paramsToUse.activeConfigId().orElse("")), //
                         input().withType(SUBMIT).withName(EXECUTE).withValue("Run tests") //
