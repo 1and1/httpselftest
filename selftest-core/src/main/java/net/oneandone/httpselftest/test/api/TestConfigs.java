@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -31,11 +32,11 @@ public class TestConfigs {
         configsMap = new HashMap<>();
     }
 
-    public Values create(String configId, Map<String, String> parameterMap) {
-        assertThat(configId != null, "Config id must not be null.");
-        assertThat(getIds().contains(configId), "Unknown config id: " + configId);
+    public Values create(String activeConfigId, Map<String, String> parameterMap) {
+        assertThat(activeConfigId != null, "Config id must not be null.");
+        assertThat(getIds().contains(activeConfigId), "Unknown config id: " + activeConfigId);
 
-        return new Values(configId, parameterMap);
+        return new Values(Optional.of(activeConfigId), parameterMap);
     }
 
     public Values create(Map<String, String> parameterMap) {
@@ -60,7 +61,7 @@ public class TestConfigs {
             map.put(parameterNames.get(i), parameterValues[i]);
         }
 
-        configsMap.put(id, new Values(id, map));
+        configsMap.put(id, new Values(Optional.of(id), map));
     }
 
     public List<String> getParameterNames() {
@@ -86,17 +87,17 @@ public class TestConfigs {
     public class Values implements TestValues {
         private final Map<String, String> parameterMap;
 
-        private final String configId;
+        private final Optional<String> activeConfigId;
 
         private Values(Map<String, String> testParams) {
-            this("", testParams);
+            this(Optional.empty(), testParams);
         }
 
-        private Values(String configId, Map<String, String> testParams) {
-            assertThat(configId != null, "Config id must not be null.");
+        private Values(Optional<String> activeConfigId, Map<String, String> testParams) {
+            assertThat(activeConfigId != null, "Config id must not be null.");
             assertThat(testParams != null, "Parameter map must not be null.");
 
-            this.configId = configId;
+            this.activeConfigId = activeConfigId;
 
             Map<String, String> processedParams = new HashMap<>();
             parameterNames.forEach(name -> {
@@ -113,8 +114,8 @@ public class TestConfigs {
             return parameterMap.get(name);
         }
 
-        public String getConfigId() {
-            return configId;
+        public Optional<String> activeConfigId() {
+            return activeConfigId;
         }
 
     }

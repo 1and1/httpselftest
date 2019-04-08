@@ -161,17 +161,18 @@ public class SelftestHtmlWriterTest {
         configs.put("config_1", "value1", "value2", "value3");
         configs.put("config_2", "value1", "value2", "value3");
 
-        Optional<DomContent> noConfigs = writer.providedConfigsForm(new TestConfigs(), setOf(), "");
+        Optional<DomContent> noConfigs = writer.providedConfigsForm(new TestConfigs(), setOf(), Optional.empty());
         assertThat(noConfigs).isNotPresent();
 
-        String noIdsRelevant = writer.providedConfigsForm(configs, setOf(), "").get().render();
+        String noIdsRelevant = writer.providedConfigsForm(configs, setOf(), Optional.empty()).get().render();
         assertThat(noIdsRelevant).contains("relevantMarkets", "config-id", "config_1").doesNotContain("otherMarkets",
                 "activeConfigId");
 
-        String someIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1"), "config_1").get().render();
+        String someIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1"), Optional.of("config_1")).get().render();
         assertThat(someIdsIrrelevant).contains("relevantMarkets", "otherMarkets", "activeConfigId");
 
-        String noIdsIrrelevant = writer.providedConfigsForm(configs, setOf("config_1", "config_2"), "").get().render();
+        String noIdsIrrelevant =
+                writer.providedConfigsForm(configs, setOf("config_1", "config_2"), Optional.empty()).get().render();
         assertThat(noIdsIrrelevant).contains("relevantMarkets").doesNotContain("otherMarkets");
     }
 

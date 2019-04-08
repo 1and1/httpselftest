@@ -121,8 +121,8 @@ public class TestConfigsTest {
         TestConfigs c = new TestConfigs("p1");
         c.put("c1", "v1");
         c.put("c2", "v2");
-        assertThat(c.getValues("c1").getConfigId()).isEqualTo("c1");
-        assertThat(c.getValues("c2").getConfigId()).isEqualTo("c2");
+        assertThat(c.getValues("c1").activeConfigId()).containsSame("c1");
+        assertThat(c.getValues("c2").activeConfigId()).containsSame("c2");
     }
 
     @Test

@@ -91,7 +91,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeTestcaseToggleScript();
         write(metainfoBlock(testsBaseUrl, lastTestRun, callerIp, lastTestrunIp));
         write(testParametersForm(configs, paramsToUse, servletName));
-        providedConfigsForm(configs, relevantConfigIds, paramsToUse.getConfigId()).ifPresent(this::write);
+        providedConfigsForm(configs, relevantConfigIds, paramsToUse.activeConfigId()).ifPresent(this::write);
         write(div().withClass("clear"));
     }
 
@@ -265,12 +265,13 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                                 text(name), //
                                 input().withType("text").withName(PARAMETER_PREFIX + name).withValue(paramsToUse.get(name))))
                                 .toArray(ContainerTag[]::new)), //
-                        input().withCondHidden(true).withName(CONFIG_ID).withValue(paramsToUse.getConfigId()), //
+                        input().withCondHidden(true).withName(CONFIG_ID).withValue(paramsToUse.activeConfigId().orElse("")), //
                         input().withType(SUBMIT).withName(EXECUTE).withValue("Run tests") //
                 ));
     }
 
-    Optional<DomContent> providedConfigsForm(TestConfigs configs, Set<String> configIdsForCurrentMarket, String activeConfigId) {
+    Optional<DomContent> providedConfigsForm(TestConfigs configs, Set<String> configIdsForCurrentMarket,
+            Optional<String> activeConfigId) {
         if (configs.isEmpty()) {
             return Optional.empty();
         }
@@ -442,7 +443,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return joined;
     }
 
-    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className, String activeConfigId) {
+    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className, Optional<String> activeConfigId) {
         if (idsToWrite.isEmpty()) {
             throw new IllegalStateException("called configsTable with 0 ids");
         }
@@ -451,8 +452,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return table().withClass(className).with( //
                 idsByFirstChar.keySet().stream().sorted().map(firstChar -> //
                 row(idsByFirstChar.get(firstChar).stream().sorted().map(id -> //
-                input().withType(SUBMIT).withName(CONFIG_ID).withValue(id).withCondClass(id.equals(activeConfigId),
-                        "activeConfigId") //
+                input().withType(SUBMIT).withName(CONFIG_ID).withValue(id)
+                        .withCondClass(activeConfigId.map(id::equals).orElse(false), "activeConfigId") //
                 ).toArray(DomContent[]::new)) //
                 ).toArray(ContainerTag[]::new) //
         );
