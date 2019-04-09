@@ -42,7 +42,7 @@ public class TestConfigsTest {
     }
 
     @Test
-    public void new_testconfigs_nullnull() {
+    public void new_testconfigs_nullParameter() {
         assertThatThrownBy(() -> new TestConfigs(null, null)).hasMessageContaining(NOT_NULL);
     }
 
@@ -62,7 +62,7 @@ public class TestConfigsTest {
     }
 
     @Test
-    public void fixed_nullnull() throws Exception {
+    public void fixed_nullParameter() throws Exception {
         assertThatThrownBy(() -> p1Config.fixed(null, null)).hasMessageContaining(NOT_NULL);
     }
 
@@ -96,6 +96,24 @@ public class TestConfigsTest {
     public void fixed_afterPut() throws Exception {
         p1Config.put("c1", "v1");
         assertThatThrownBy(() -> p1Config.fixed("p1")).hasMessageContaining("before adding values");
+    }
+
+    @Test
+    public void isFixed_unfixed() throws Exception {
+        TestConfigs c = new TestConfigs("p1");
+        Values v = c.createEmpty();
+
+        assertThatThrownBy(() -> v.isFixed(null));
+        assertThatThrownBy(() -> v.isFixed("p2"));
+        assertThat(v.isFixed("p1")).isFalse();
+    }
+
+    @Test
+    public void isFixed_fixed() throws Exception {
+        TestConfigs c = new TestConfigs("p1");
+        c.fixed("p1");
+        Values vfixed = c.createEmpty();
+        assertThat(vfixed.isFixed("p1")).isTrue();
     }
 
     @Test
@@ -218,7 +236,6 @@ public class TestConfigsTest {
         v = c.create("c1", params);
         assertThat(v.get("p1")).isEqualTo("v1");
         assertThat(v.get(FIXED)).isEqualTo("fixed_value");
-        assertThat(v.getFixedParameterNames()).containsExactly(FIXED);
     }
 
     @Test

@@ -259,18 +259,16 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                 ));
     }
 
-    DomContent testParametersForm(TestConfigs configs, TestConfigs.Values paramsToUse, String servletName) {
-        List<String> fixedParams = paramsToUse.getFixedParameterNames();
+    DomContent testParametersForm(TestConfigs configs, TestConfigs.Values params, String servletName) {
         return div().withId("params").withClass("block").with( //
                 form().withMethod("POST").withAction(servletName).with( //
                         text("Test parameters:"), //
                         table(configs.getParameterNames().stream().map(name -> row( //
-                                span(name).withCondClass(fixedParams.contains(name), "fixed"), //
+                                span(name).withCondClass(params.isFixed(name), "fixed"), //
                                 input().withType("text").withName(PARAMETER_PREFIX + name)
-                                        .condAttr(fixedParams.contains(name), "readonly", "true")
-                                        .withValue(paramsToUse.get(name))))
+                                        .condAttr(params.isFixed(name), "readonly", "true").withValue(params.get(name))))
                                 .toArray(ContainerTag[]::new)), //
-                        input().withCondHidden(true).withName(CONFIG_ID).withValue(paramsToUse.activeConfigId().orElse("")), //
+                        input().withCondHidden(true).withName(CONFIG_ID).withValue(params.activeConfigId().orElse("")), //
                         input().withType(SUBMIT).withName(EXECUTE).withValue("Run tests") //
                 ));
     }

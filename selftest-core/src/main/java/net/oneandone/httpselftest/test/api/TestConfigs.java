@@ -149,8 +149,9 @@ public class TestConfigs {
             return activeConfigId;
         }
 
-        public List<String> getFixedParameterNames() {
-            return fixedParameterNames;
+        public boolean isFixed(String name) {
+            assertThat(allParameterNames.contains(name), "Unknown parameter name '" + name + "'.");
+            return fixedParameterNames.contains(name);
         }
 
     }
