@@ -53,6 +53,10 @@ public class TestConfigs {
         assertThat(allParameterNames.containsAll(parameterSet), "Fixed parameter unknown.");
     }
 
+    public boolean hasFixedParams() {
+        return !fixedParameterNames.isEmpty();
+    }
+
     public Values create(String activeConfigId, Map<String, String> parameterMap) {
         assertThat(activeConfigId != null, "Config id must not be null.");
         assertThat(configsMap.containsKey(activeConfigId), "Unknown config id: " + activeConfigId);

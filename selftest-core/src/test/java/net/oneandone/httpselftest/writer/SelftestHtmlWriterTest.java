@@ -28,6 +28,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.LoggerFactory;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.TestRequest;
@@ -84,6 +85,10 @@ public class SelftestHtmlWriterTest {
         String callerIp = "123.5.4.3";
         String lastTestrunIp = "12.23.34.45";
 
+        writer.writePageStart(configs, relevantConfigIds, paramsToUse, servletName, testsBaseUrl, lastTestRun, callerIp,
+                lastTestrunIp);
+
+        ReflectionTestUtils.setField(configs, "fixedParameterNames", Collections.emptyList());
         writer.writePageStart(configs, relevantConfigIds, paramsToUse, servletName, testsBaseUrl, lastTestRun, callerIp,
                 lastTestrunIp);
     }
@@ -169,6 +174,7 @@ public class SelftestHtmlWriterTest {
     @Test
     public void providedConfigsForm_silent() {
         TestConfigs configs = new TestConfigs("param1", "param2", "param3");
+        configs.fixed("param2");
         configs.put("config_1", "value1", "value2", "value3");
         configs.put("config_2", "value1", "value2", "value3");
 

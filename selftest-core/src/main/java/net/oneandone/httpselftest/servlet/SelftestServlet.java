@@ -63,7 +63,6 @@ public abstract class SelftestServlet extends HttpServlet {
 
     // TODO (project)
     // - extract http clients. pull selftest specific logic out. maybe send Accept-Encoding
-    // - support read-only testvalues
     // - write tests for test runner
     // - provide logs to verification?
 

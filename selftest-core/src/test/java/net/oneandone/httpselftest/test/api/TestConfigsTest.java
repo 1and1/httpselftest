@@ -87,6 +87,14 @@ public class TestConfigsTest {
     }
 
     @Test
+    public void hasFixedParams() throws Exception {
+        assertThat(p1Config.hasFixedParams()).as("before fixed()").isFalse();
+
+        p1Config.fixed("p1");
+        assertThat(p1Config.hasFixedParams()).as("after fixed").isTrue();
+    }
+
+    @Test
     public void fixed_twice() throws Exception {
         p1Config.fixed("p1");
         assertThatThrownBy(() -> p1Config.fixed("p1")).hasMessageContaining("already set");

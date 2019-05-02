@@ -279,6 +279,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
             return Optional.empty();
         }
         Set<String> allIds = configs.getIds();
+        boolean hasFixedParams = configs.hasFixedParams();
 
         final Set<String> firstClassIds;
         final Set<String> secondClassIds;
@@ -292,9 +293,9 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
         ContainerTag form = form().withMethod("GET").with( //
                 div("Available pre-defined parameter sets for this application. Click to transfer values into form:"), //
-                configsTableAsDom(firstClassIds, "relevantMarkets", activeConfigId));
+                configsTableAsDom(firstClassIds, "relevantMarkets", activeConfigId, hasFixedParams));
         if (!secondClassIds.isEmpty()) {
-            form.with(configsTableAsDom(secondClassIds, "otherMarkets", activeConfigId));
+            form.with(configsTableAsDom(secondClassIds, "otherMarkets", activeConfigId, hasFixedParams));
         }
 
         return Optional.of(div().withId("configs").withClass("block").with(form));
@@ -446,7 +447,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return joined;
     }
 
-    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className, Optional<String> activeConfigId) {
+    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className, Optional<String> activeConfigId,
+            boolean fixedParamsExist) {
         if (idsToWrite.isEmpty()) {
             throw new IllegalStateException("called configsTable with 0 ids");
         }
@@ -456,7 +458,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                 idsByFirstChar.keySet().stream().sorted().map(firstChar -> //
                 row(idsByFirstChar.get(firstChar).stream().sorted().map(id -> //
                 input().withType(SUBMIT).withName(CONFIG_ID).withValue(id)
-                        .withCondClass(activeConfigId.map(id::equals).orElse(false), "activeConfigId") //
+                        .withCondClass(fixedParamsExist && activeConfigId.map(id::equals).orElse(false), "activeConfigId") //
                 ).toArray(DomContent[]::new)) //
                 ).toArray(ContainerTag[]::new) //
         );
