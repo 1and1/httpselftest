@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
 
-import javax.ws.rs.core.MediaType;
+import org.springframework.http.MediaType;
 
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.http.TestResponse;
@@ -55,7 +55,7 @@ public class ExampleSelftestServlet extends SelftestServlet {
             RequestHelper.addFormParamsUtf8(join, config, FIRSTNAME, LASTNAME, P_FIXED);
 
             Map<String, String> headers = new HashMap<>();
-            headers.put("Content-Type", MediaType.APPLICATION_FORM_URLENCODED);
+            headers.put("Content-Type", MediaType.APPLICATION_FORM_URLENCODED_VALUE);
             return new TestRequest("echo", "POST", headers, join.toString());
         }
 

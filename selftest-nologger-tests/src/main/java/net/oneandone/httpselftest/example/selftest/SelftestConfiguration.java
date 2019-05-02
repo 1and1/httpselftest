@@ -2,8 +2,7 @@ package net.oneandone.httpselftest.example.selftest;
 
 import java.util.function.Supplier;
 
-import javax.inject.Inject;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.web.EndpointServlet;
 import org.springframework.boot.actuate.endpoint.web.annotation.ServletEndpoint;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
@@ -17,7 +16,7 @@ import net.oneandone.httpselftest.servlet.SelftestServlet;
 @Configuration
 public class SelftestConfiguration {
 
-    @Inject
+    @Autowired
     Environment env;
 
     @Bean

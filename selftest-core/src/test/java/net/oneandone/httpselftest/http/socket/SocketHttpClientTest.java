@@ -14,7 +14,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.ConnectException;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -361,7 +360,8 @@ public class SocketHttpClientTest {
     @Test
     public void faultConnectionReset() {
         stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.CONNECTION_RESET_BY_PEER)));
-        assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class).hasCauseInstanceOf(SocketException.class);
+        assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class)
+                .hasCauseInstanceOf(SocketTimeoutException.class);
     }
 
     @Test

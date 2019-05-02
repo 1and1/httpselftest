@@ -213,7 +213,8 @@ public class UrlConnectionHttpClientTest {
     @Test
     public void faultConnectionReset() throws Exception {
         stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.CONNECTION_RESET_BY_PEER)));
-        assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class).hasCauseInstanceOf(SocketException.class);
+        assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class)
+                .hasCauseInstanceOf(SocketTimeoutException.class);
     }
 
     @Test

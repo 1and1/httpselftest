@@ -8,4 +8,4 @@ selftest:
   configgroups: local, staging
   override:
     port: 8080
-    contextpath: /app
+    contextpath: /

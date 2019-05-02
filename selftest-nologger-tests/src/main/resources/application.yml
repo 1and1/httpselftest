@@ -8,5 +8,5 @@ selftest:
   logger: none
   override:
     port: 8080
-    contextpath: /app
+    contextpath: /
 
