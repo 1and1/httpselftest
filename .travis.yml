@@ -1,7 +1,6 @@
 language: java
 
-#script: mvn cobertura:cobertura -Ptravis -B
-script: mvn clean verify -B
+script: mvn clean verify -Ptravis -B
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
