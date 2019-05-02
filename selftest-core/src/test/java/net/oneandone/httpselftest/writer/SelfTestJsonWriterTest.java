@@ -32,7 +32,7 @@ public class SelfTestJsonWriterTest {
 
     @Test
     public void writeTestOutcome_error() {
-        HttpException exception = new HttpException(new RuntimeException("inner"),
+        HttpException exception = new HttpException(new IllegalAccessException("inner"),
                 "static string: holla die waldfee!".getBytes(StandardCharsets.UTF_8));
 
         TestRunData testRun = SelftestHtmlWriterTest.testRun("test1", "mn1", 234, TestRunResult.error(exception));
@@ -43,7 +43,8 @@ public class SelfTestJsonWriterTest {
         writer.writePageEnd();
 
         String json = out.written();
-        assertThat(json).contains("success", "false");
+        assertThat(json).contains("success", "false", "testErrors", "test1", "message", "IllegalAccessException", "inner")
+                .doesNotContain("at ");
     }
 
     @Test
@@ -55,7 +56,7 @@ public class SelfTestJsonWriterTest {
         writer.writePageEnd();
 
         String json = out.written();
-        assertThat(json).contains("success", "false");
+        assertThat(json).contains("success", "false", "testFailures", "test1", "message", "failed");
     }
 
     @Test
@@ -67,7 +68,7 @@ public class SelfTestJsonWriterTest {
         writer.writePageEnd();
 
         String json = out.written();
-        assertThat(json).contains("success", "true");
+        assertThat(json).contains("success", "true").doesNotContain("test1", "message");
     }
 
 }

@@ -1,16 +1,20 @@
 package net.oneandone.httpselftest.writer;
 
+import java.io.PrintWriter;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import com.github.cliftonlabs.json_simple.JsonArray;
+import com.github.cliftonlabs.json_simple.JsonObject;
+
 import net.oneandone.httpselftest.log.LogDetails;
 import net.oneandone.httpselftest.test.api.TestCase;
 import net.oneandone.httpselftest.test.api.TestConfigs;
 import net.oneandone.httpselftest.test.run.ResultType;
 import net.oneandone.httpselftest.test.run.SimpleContext;
 import net.oneandone.httpselftest.test.run.TestRunData;
-import java.io.PrintWriter;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 public class SelfTestJsonWriter extends SelfTestWriter {
 
@@ -33,7 +37,16 @@ public class SelfTestJsonWriter extends SelfTestWriter {
     @Override
     public void writePageEnd() {
         boolean success = testRunData.stream().allMatch(data -> data.getResult().type == ResultType.SUCCESS);
-        writer.append("{ \"success\": \"" + success + "\"}").flush();
+
+        JsonArray failures = testRunData.stream().filter(data -> data.getResult().type == ResultType.FAILURE)
+                .map(data -> jsonFailureOf(data.testName, data.getResult().assertionMessage))
+                .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+
+        JsonArray errors = testRunData.stream().filter(data -> data.getResult().type == ResultType.ERROR)
+                .map(data -> jsonErrorOf(data.testName, data.getResult().uncaught))
+                .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+
+        writer.append(jsonResponseOf(success, failures, errors)).flush();
     }
 
     @Override
@@ -51,6 +64,26 @@ public class SelfTestJsonWriter extends SelfTestWriter {
 
     @Override
     public void writeUnrunTests(List<TestCase> tests) {
+    }
+
+    private static String jsonResponseOf(boolean success, JsonArray failures, JsonArray errors) {
+
+        JsonObject s = new JsonObject();
+        s.put("success", success);
+        s.put("testFailures", failures);
+        s.put("testErrors", errors);
+        return s.toJson();
+    }
+
+    private static JsonObject jsonFailureOf(String name, String message) {
+        JsonObject o = new JsonObject();
+        o.put("name", name);
+        o.put("message", message);
+        return o;
+    }
+
+    private static JsonObject jsonErrorOf(String name, Throwable t) {
+        return jsonFailureOf(name, t.toString());
     }
 
 }
