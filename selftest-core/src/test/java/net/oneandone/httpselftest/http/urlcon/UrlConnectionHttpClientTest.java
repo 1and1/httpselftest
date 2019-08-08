@@ -210,11 +210,11 @@ public class UrlConnectionHttpClientTest {
                 .hasCauseInstanceOf(SocketTimeoutException.class);
     }
 
+    // the exception changes between JDK8 and JDK11
     @Test
     public void faultConnectionReset() throws Exception {
         stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.CONNECTION_RESET_BY_PEER)));
-        assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class)
-                .hasCauseInstanceOf(SocketTimeoutException.class);
+        assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class).hasCauseInstanceOf(SocketException.class);
     }
 
     @Test
