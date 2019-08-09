@@ -1,7 +1,7 @@
 package net.oneandone.httpselftest.test.run;
 
+import net.oneandone.httpselftest.http.FullTestResponse;
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.test.run.TestRunData;
 import net.oneandone.httpselftest.test.run.TestRunResult;
 
@@ -19,7 +19,7 @@ public class TestRunDataHelper {
         data.request = request;
     }
 
-    public static void setResponse(TestRunData data, TestResponse response) {
+    public static void setResponse(TestRunData data, FullTestResponse response) {
         data.response = response;
     }
 

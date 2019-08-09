@@ -37,6 +37,7 @@ import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.SocketMock;
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.test.api.AssertionException;
+import net.oneandone.httpselftest.test.api.TestResponse;
 
 public class SocketHttpClientTest {
 
@@ -122,7 +123,7 @@ public class SocketHttpClientTest {
         stub(200);
 
         // execute
-        SocketTestResponse response = client.call(baseUrl, new TestRequest("path", "GET"), "runIdX", 1000);
+        TestResponse response = client.call(baseUrl, new TestRequest("path", "GET"), "runIdX", 1000).getTestResponse();
 
         // verify request
         verify(1, anyRequestedFor(anyUrl()));
@@ -158,7 +159,7 @@ public class SocketHttpClientTest {
                 + "\r\n" //
                 + "autobahn"); // 8 instead of 7 bytes
 
-        SocketTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobah"); // missing last byte 'n'
     }
@@ -171,7 +172,7 @@ public class SocketHttpClientTest {
                 + "\r\n" //
                 + "autobahn");
 
-        SocketTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobahn");
     }
@@ -183,7 +184,7 @@ public class SocketHttpClientTest {
                 + "\r\n" //
                 + "autobahn");
 
-        SocketTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobahn");
     }
@@ -196,7 +197,7 @@ public class SocketHttpClientTest {
                 + "\r\n" //
                 + "autobahn");
 
-        SocketTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobahn");
     }
@@ -260,7 +261,7 @@ public class SocketHttpClientTest {
         wire.stubFor(
                 any(anyUrl()).willReturn(aResponse().withStatus(200).withHeader("HeaderA", "1", "2").withHeader("HeaderB", "5")));
 
-        SocketTestResponse response = invoke(simpleGet());
+        TestResponse response = invoke(simpleGet()).getTestResponse();
 
         assertThatThrownBy(() -> response.getHeader("HeaderA")).isInstanceOf(AssertionException.class);
         assertThat(response.getHeaderAllValues("HeaderA")).containsSequence("1", "2").hasSize(2);
@@ -274,7 +275,7 @@ public class SocketHttpClientTest {
 
     @Test
     public void responseWithoutBody() {
-        SocketTestResponse response = invoke(simpleGet());
+        TestResponse response = invoke(simpleGet()).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("");
     }
@@ -283,7 +284,7 @@ public class SocketHttpClientTest {
     public void responseWithEmptyBody() {
         stub(200, "");
 
-        SocketTestResponse response = invoke(simpleGet());
+        TestResponse response = invoke(simpleGet()).getTestResponse();
         assertThat(response.getBody()).isEqualTo("");
     }
 
@@ -292,7 +293,7 @@ public class SocketHttpClientTest {
         String expectedBody = "!\"§$%&/()=?ßüäö²³µ|^°'`~";
         wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withBody(expectedBody.getBytes(UTF_8))));
 
-        SocketTestResponse response = invoke(simpleGet());
+        TestResponse response = invoke(simpleGet()).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo(expectedBody);
     }
@@ -325,7 +326,7 @@ public class SocketHttpClientTest {
             wire.resetAll();
             stub(200, "body");
 
-            SocketTestResponse response = invoke(new TestRequest("path", method));
+            TestResponse response = invoke(new TestRequest("path", method)).getTestResponse();
             if (method.equals("HEAD")) {
                 assertThat(response.getBody()).as("method: " + method).isEqualTo("");
             } else {
@@ -341,7 +342,7 @@ public class SocketHttpClientTest {
             wire.resetAll();
             stub(statusCode, "body");
 
-            SocketTestResponse response = invoke(simpleGet());
+            TestResponse response = invoke(simpleGet()).getTestResponse();
             assertThat(response.getStatus()).as("status code for: " + statusCode).isEqualTo(statusCode);
             if (statusCode == 100 || statusCode == 204 || statusCode == 304) {
                 assertThat(response.getBody()).as("body for: " + statusCode).isEqualTo("");

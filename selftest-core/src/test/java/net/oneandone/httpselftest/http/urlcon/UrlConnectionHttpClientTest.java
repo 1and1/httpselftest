@@ -39,6 +39,7 @@ import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.SocketMock;
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.test.api.AssertionException;
+import net.oneandone.httpselftest.test.api.TestResponse;
 
 public class UrlConnectionHttpClientTest {
 
@@ -77,7 +78,7 @@ public class UrlConnectionHttpClientTest {
         stub(200);
 
         // execute
-        UrlConnectionTestResponse response = client.call(baseUrl, new TestRequest("path", "GET"), "runIdX", 1000);
+        TestResponse response = client.call(baseUrl, new TestRequest("path", "GET"), "runIdX", 1000).getTestResponse();
 
         // verify request
         verify(1, anyRequestedFor(anyUrl()));
@@ -121,7 +122,7 @@ public class UrlConnectionHttpClientTest {
         wire.stubFor(
                 any(anyUrl()).willReturn(aResponse().withStatus(200).withHeader("HeaderA", "1", "2").withHeader("HeaderB", "5")));
 
-        UrlConnectionTestResponse response = invoke(simpleGet());
+        TestResponse response = invoke(simpleGet()).getTestResponse();
 
         assertThatThrownBy(() -> response.getHeader("HeaderA")).isInstanceOf(AssertionException.class);
         assertThat(response.getHeaderAllValues("HeaderA")).containsSequence("1", "2").hasSize(2);
@@ -138,7 +139,7 @@ public class UrlConnectionHttpClientTest {
         String expectedBody = "!\"§$%&/()=?ßüäö²³µ|^°'`~";
         wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withBody(expectedBody.getBytes(UTF_8))));
 
-        UrlConnectionTestResponse response = invoke(simpleGet());
+        TestResponse response = invoke(simpleGet()).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo(expectedBody);
     }
@@ -186,7 +187,7 @@ public class UrlConnectionHttpClientTest {
         for (Integer statusCode : new int[] { 200, 201, 300, 301, 302, 400, 401, 403, 404, 410, 500, 501, 502, 502, 504 }) {
             wire.resetAll();
             stub(statusCode, "body");
-            UrlConnectionTestResponse response = invoke(simpleGet());
+            TestResponse response = invoke(simpleGet()).getTestResponse();
             assertThat(response.getStatus()).as("status code for: " + statusCode).isEqualTo(statusCode);
             assertThat(response.getBody()).as("body for :" + statusCode).isEqualTo("body");
         }
@@ -197,7 +198,7 @@ public class UrlConnectionHttpClientTest {
         for (Integer statusCode : new int[] { 204 }) {
             wire.resetAll();
             stub(statusCode, "body");
-            UrlConnectionTestResponse response = invoke(simpleGet());
+            TestResponse response = invoke(simpleGet()).getTestResponse();
             assertThat(response.getStatus()).as("status code for: " + statusCode).isEqualTo(statusCode);
             assertThat(response.getBody()).as("body for :" + statusCode).isEqualTo("");
         }
@@ -255,7 +256,7 @@ public class UrlConnectionHttpClientTest {
                 + "\r\n" //
                 + "autobahn"); // 8 instead of 7 bytes
 
-        UrlConnectionTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobah"); // missing last byte 'n'
     }
@@ -268,7 +269,7 @@ public class UrlConnectionHttpClientTest {
                 + "\r\n" //
                 + "autobahn");
 
-        UrlConnectionTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobahn");
     }
@@ -280,7 +281,7 @@ public class UrlConnectionHttpClientTest {
                 + "\r\n" //
                 + "autobahn");
 
-        UrlConnectionTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobahn");
     }
@@ -293,7 +294,7 @@ public class UrlConnectionHttpClientTest {
                 + "\r\n" //
                 + "autobahn");
 
-        UrlConnectionTestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000);
+        TestResponse response = client.call(baseUrlSocket, simpleGet(), "runIdX", 1000).getTestResponse();
 
         assertThat(response.getBody()).isEqualTo("autobahn");
     }
@@ -341,23 +342,6 @@ public class UrlConnectionHttpClientTest {
 
     private UrlConnectionTestResponse invoke(TestRequest request) {
         return client.call(baseUrl, request, "irrelevant", 1000);
-    }
-
-    public static void main(String[] args) {
-
-        UrlConnectionHttpClient client = new UrlConnectionHttpClient();
-
-        HashMap<String, String> headers = headers();
-        TestRequest request = new TestRequest("/public/", "DELETE", headers, "body");
-
-        // TestResponse response = call("http://www.web.de/", request, "runId1");
-        UrlConnectionTestResponse response =
-                client.call("http://personalmasterdata-uli-bs-qa01.server.lan:8080/", request, "runId1", 2000);
-        // TestResponse response = call("https://github.com/awqpouirasldf/", request, "runId1");
-
-        System.out.println(request.wireRepresentation());
-        System.out.println("===");
-        System.out.println(response.wireRepresentation());
     }
 
 }

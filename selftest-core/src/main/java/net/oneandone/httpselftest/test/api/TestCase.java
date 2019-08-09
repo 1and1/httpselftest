@@ -1,7 +1,6 @@
 package net.oneandone.httpselftest.test.api;
 
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.test.util.Assertions;
 import net.oneandone.httpselftest.test.util.RequestHelper;
 

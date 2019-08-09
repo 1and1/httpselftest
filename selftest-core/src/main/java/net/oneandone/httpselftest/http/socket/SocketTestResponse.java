@@ -1,20 +1,19 @@
 package net.oneandone.httpselftest.http.socket;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
 
 import net.oneandone.httpselftest.http.Headers;
-import net.oneandone.httpselftest.http.TestResponse;
-import net.oneandone.httpselftest.test.api.AssertionException;
+import net.oneandone.httpselftest.http.FullTestResponse;
+import net.oneandone.httpselftest.test.api.TestResponse;
 
-public class SocketTestResponse implements TestResponse {
+public class SocketTestResponse implements FullTestResponse {
 
     final int statusCode;
     final Headers headers;
     final String body;
 
-    byte[] wireBytes;
+    public byte[] headerBytes; // NOSONAR
+    public byte[] bodyBytes; // NOSONAR
 
     public SocketTestResponse(int statusCode, Headers headers, String body) {
         this.statusCode = statusCode;
@@ -23,39 +22,21 @@ public class SocketTestResponse implements TestResponse {
     }
 
     @Override
-    public int getStatus() {
-        return statusCode;
+    public TestResponse getTestResponse() {
+        return new TestResponse(statusCode, headers, body);
     }
 
     @Override
-    public String getHeader(String name) {
-        List<String> values = headers.get(name);
-        if (values == null) {
+    public String headerBlock() {
+        return new String(headerBytes, StandardCharsets.US_ASCII);
+    }
+
+    @Override
+    public String bodyBlock() {
+        if (bodyBytes == null || bodyBytes.length <= 0) {
             return null;
         }
-        if (values.size() != 1) {
-            throw new AssertionException("expecting header [" + name + "] to be single-valued, but was: " + values);
-        }
-        return values.get(0);
-    }
-
-    @Override
-    public List<String> getHeaderAllValues(String name) {
-        return headers.get(name);
-    }
-
-    @Override
-    public String getBody() {
-        return body;
-    }
-
-    @Override
-    public String wireRepresentation() {
-        return new String(wireBytes, StandardCharsets.UTF_8);
-    }
-
-    public byte[] getBytes() {
-        return Arrays.copyOf(wireBytes, wireBytes.length);
+        return new String(bodyBytes, StandardCharsets.UTF_8); // TODO honor response charset
     }
 
 }

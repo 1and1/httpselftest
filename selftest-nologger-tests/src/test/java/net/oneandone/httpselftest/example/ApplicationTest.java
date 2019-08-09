@@ -14,7 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.http.socket.SocketHttpClient;
-import net.oneandone.httpselftest.http.socket.SocketTestResponse;
+import net.oneandone.httpselftest.test.api.TestResponse;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = WebEnvironment.DEFINED_PORT)
@@ -37,8 +37,8 @@ public class ApplicationTest {
         headers.put("Content-Type", "application/x-www-form-urlencoded");
         TestRequest request = new TestRequest("", "POST", headers, "execute=true&p-firstname=pish&p-lastname=posh");
 
-        SocketTestResponse response =
-                new SocketHttpClient().call("http://localhost:" + mPort + "/actuator/selftest", request, "someId", 2000);
+        TestResponse response = new SocketHttpClient()
+                .call("http://localhost:" + mPort + "/actuator/selftest", request, "someId", 2000).getTestResponse();
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getBody()).contains("Done.").doesNotContain("EXCEPTION DURING EXECUTION", "LOG");

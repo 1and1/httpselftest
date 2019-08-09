@@ -87,7 +87,7 @@ public class TestRunner {
             testRun.logs = LogAccess.snapshot(buffersForRunId);
 
             try {
-                test.verify(config, testRun.response, ctx);
+                test.verify(config, testRun.response.getTestResponse(), ctx);
                 testRun.result = TestRunResult.success();
             } catch (AssertionException e) { // NOSONAR
                 testRun.result = TestRunResult.failure(e.getMessage());
@@ -110,12 +110,12 @@ public class TestRunner {
 
     private static HttpClient getClient(TestRequest request) {
         switch (request.clientType) {
-        case SOCKET:
-            return new SocketHttpClient();
-        case URLCON:
-            return new UrlConnectionHttpClient();
-        default:
-            throw new IllegalStateException("Unknown clientType: " + request.clientType);
+            case SOCKET:
+                return new SocketHttpClient();
+            case URLCON:
+                return new UrlConnectionHttpClient();
+            default:
+                throw new IllegalStateException("Unknown clientType: " + request.clientType);
         }
     }
 

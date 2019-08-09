@@ -1,4 +1,4 @@
-package net.oneandone.httpselftest.writer;
+package net.oneandone.httpselftest.http.parser;
 
 /**
  * COPIED FROM org.lasinger.tools:hexdump:0.2.0 TO AVOID DEPENDENCY. UNDER MIT LICENSE. see https://github.com/zuckel/hexdump

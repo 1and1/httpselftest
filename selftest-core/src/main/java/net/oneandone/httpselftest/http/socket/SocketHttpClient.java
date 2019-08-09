@@ -23,9 +23,6 @@ import net.oneandone.httpselftest.http.TestRequest;
 
 public class SocketHttpClient implements HttpClient {
 
-    public static final List<String> HTTP_METHODS =
-            Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "TRACE");
-
     @Override
     public SocketTestResponse call(String baseUrl, TestRequest request, String runId, int timeoutMillis) {
         try (Socket socket = new Socket()) {
@@ -112,7 +109,8 @@ public class SocketHttpClient implements HttpClient {
             String body = new String(bodyBytes, UTF_8);
 
             SocketTestResponse response = new SocketTestResponse(statusCode, headers, body);
-            response.wireBytes = concat(headerBytes, bodyBytes);
+            response.headerBytes = headerBytes;
+            response.bodyBytes = bodyBytes;
             return response;
         } catch (Exception e) {
             throw new HttpException(e, in.readBytes());
@@ -137,12 +135,12 @@ public class SocketHttpClient implements HttpClient {
         String txEncoding = getLastValue(headers, "Transfer-Encoding").orElse("identity").toLowerCase();
 
         switch (txEncoding) {
-        case "chunked":
-            return consumeBodyChunked(in);
-        case "identity":
-            return consumeBodyIdentity(headers, in);
-        default:
-            throw new IllegalStateException("This HTTP client does not implement Transfer-Encoding '" + txEncoding + "'.");
+            case "chunked":
+                return consumeBodyChunked(in);
+            case "identity":
+                return consumeBodyIdentity(headers, in);
+            default:
+                throw new IllegalStateException("This HTTP client does not implement Transfer-Encoding '" + txEncoding + "'.");
         }
     }
 
@@ -256,6 +254,8 @@ public class SocketHttpClient implements HttpClient {
         for (int i = 0; i < right.length; i++) {
             newBuffer[i + offset] = right[i];
         }
+
+        // TODO use System.arraycopy instead?
 
         return newBuffer;
     }

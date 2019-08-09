@@ -33,7 +33,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.TestResponse;
+import net.oneandone.httpselftest.http.FullTestResponse;
 import net.oneandone.httpselftest.http.socket.SocketTestResponse;
 import net.oneandone.httpselftest.http.urlcon.HttpHeader;
 import net.oneandone.httpselftest.http.urlcon.UrlConnectionRequestWireRepresentation;
@@ -245,11 +245,37 @@ public class SelftestHtmlWriterTest {
     }
 
     @Test
-    public void writeTestOutcome_urlConResponse_visual() throws Exception {
+    public void writeTestOutcome_responseParserRaw() throws Exception {
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        TestRunDataHelper.setResponse(testRun, socketResponseWithBody("response body"));
+
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+
+        String html = out.written();
+        assertThat(html).contains("raw", "00000010");
+    }
+
+    @Test
+    public void writeTestOutcome_urlConResponse() throws Exception {
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
         TestRunDataHelper.setResponse(testRun, urlConResponseWithBody("response body"));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+
+        String html = out.written();
+        assertThat(html).doesNotContain("raw", "00000010"); // raw parser not active on urlConResponse
+    }
+
+    @Test
+    public void writeTestOutcome_formEncoding() throws Exception {
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        TestRunDataHelper.setResponse(testRun,
+                formResponse("key=value" + "&" + "encodedk%65y=encodedv%61l%75e" + "&" + "masked=aa%26bb%25cc%3ddd"));
+
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+
+        String html = out.written();
+        assertThat(html).contains("key = value", "encodedkey = encodedvalue", "masked = aa&amp;bb%cc=dd");
     }
 
     @Test
@@ -420,7 +446,7 @@ public class SelftestHtmlWriterTest {
         return request;
     }
 
-    static TestResponse urlConResponseWithBody(String body) {
+    static FullTestResponse urlConResponseWithBody(String body) {
         List<HttpHeader> headers = new LinkedList<>();
         headers.add(new HttpHeader("Header1", "Value1_1"));
         headers.add(new HttpHeader("Header1", "Value1_2"));
@@ -428,14 +454,25 @@ public class SelftestHtmlWriterTest {
         return new UrlConnectionTestResponse(302, "HTTP/1.1 200 OK (synthetic)", headers, body);
     }
 
-    static TestResponse socketResponseWithBody(String body) {
+    static FullTestResponse formResponse(String body) {
+        Headers headers = new Headers();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset:utf-8");
+
+        SocketTestResponse response = new SocketTestResponse(302, headers, body);
+        response.headerBytes = "static header\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+        response.bodyBytes = body.getBytes(StandardCharsets.UTF_8);
+        return response;
+    }
+
+    static FullTestResponse socketResponseWithBody(String body) {
         Headers headers = new Headers();
         headers.add("Header1", "Value1_1");
         headers.add("Header1", "Value1_2");
         headers.add("Header2", "Value2");
 
         SocketTestResponse response = new SocketTestResponse(302, headers, body);
-        ReflectionTestUtils.setField(response, "wireBytes", body.getBytes());
+        response.headerBytes = "static header\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
+        response.bodyBytes = body.getBytes(StandardCharsets.UTF_8);
         return response;
     }
 

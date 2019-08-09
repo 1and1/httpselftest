@@ -37,7 +37,11 @@ import java.util.stream.Collectors;
 
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.TestResponse;
+import net.oneandone.httpselftest.http.parser.HttpContentParser;
+import net.oneandone.httpselftest.http.parser.FormEntityParser;
+import net.oneandone.httpselftest.http.parser.PlainEntityParser;
+import net.oneandone.httpselftest.http.parser.HexdumpHttpParser;
+import net.oneandone.httpselftest.http.FullTestResponse;
 import net.oneandone.httpselftest.log.EventRenderer;
 import net.oneandone.httpselftest.log.LogDetails;
 import net.oneandone.httpselftest.log.SelftestEvent;
@@ -70,12 +74,12 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     private static final List<HttpContentParser> CONTENT_PARSERS;
 
-    // FIXME add form-urlencoded parser
     // FIXME add json parser
     static {
         CONTENT_PARSERS = new ArrayList<>();
-        CONTENT_PARSERS.add(new HttpParserPlain());
-        CONTENT_PARSERS.add(new HttpParserRaw());
+        CONTENT_PARSERS.add(new PlainEntityParser());
+        CONTENT_PARSERS.add(new HexdumpHttpParser());
+        CONTENT_PARSERS.add(new FormEntityParser());
     }
 
     public SelftestHtmlWriter(PrintWriter w) {
@@ -180,7 +184,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writer.write("\n");
     }
 
-    // TODO extract to separate file using TagCreator#styleWithInlineFile.
+    // FIXME extract to separate file using TagCreator#styleWithInlineFile.
     private void writeCSS() {
         writeDirect("<style>");
         writeDirect("  :root { --darkred: #c00; --darkorange: #d70; }");
@@ -246,14 +250,14 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  body:not(.js) .responseContent ~ .responseContent { display: none; }");
         writeDirect("  .responseToggle { padding: 2px 5px; margin-left: 5px; background-color: #fff2; border-radius: 3px; "
                 + "font-family: monospace; cursor: pointer; font-size: 12px; }");
-        writeDirect("  .responseToggle.active { color: white; }");
+        writeDirect("  .responseToggle.active { background-color: #fff4; }");
         writeDirect("  .js .responseContent:not(.active) { display: none; }");
 
         writeDirect("  ");
         writeDirect("</style>");
     }
 
-    // TODO extract to separate file using TagCreator#scriptWithInlineFile.
+    // FIXME extract to separate file using TagCreator#scriptWithInlineFile.
     private void writeTestcaseToggleScript() {
         writeDirect("<script>");
         writeDirect("document.querySelector('body').classList.add('js')");
@@ -432,7 +436,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         }
     }
 
-    private static List<DomContent> responseIfExistsAsDom(TestResponse response) {
+    private static List<DomContent> responseIfExistsAsDom(FullTestResponse response) {
         if (response == null) {
             return Collections.emptyList();
         }

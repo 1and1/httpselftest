@@ -12,11 +12,11 @@ import org.springframework.http.MediaType;
 
 import net.oneandone.httpselftest.http.HttpClient.Type;
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.servlet.SelftestServlet;
 import net.oneandone.httpselftest.test.api.Context;
 import net.oneandone.httpselftest.test.api.TestCase;
 import net.oneandone.httpselftest.test.api.TestConfigs;
+import net.oneandone.httpselftest.test.api.TestResponse;
 import net.oneandone.httpselftest.test.api.TestValues;
 import net.oneandone.httpselftest.test.util.Assertions;
 import net.oneandone.httpselftest.test.util.RequestHelper;
