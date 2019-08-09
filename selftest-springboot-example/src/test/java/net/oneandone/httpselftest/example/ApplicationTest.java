@@ -41,7 +41,7 @@ public class ApplicationTest {
                 new SocketHttpClient().call("http://localhost:" + mPort + "/actuator/selftest", request, "someId", 2000);
 
         assertThat(response.getStatus()).isEqualTo(200);
-        assertThat(response.getBody()).contains("Done.").doesNotContain("EXCEPTION DURING EXECUTION");
+        assertThat(response.getBody()).contains("Done.").doesNotContain("EXCEPTION DURING EXECUTION").contains("␣");
     }
 
 }
