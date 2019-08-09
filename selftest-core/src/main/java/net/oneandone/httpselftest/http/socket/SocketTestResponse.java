@@ -1,6 +1,7 @@
 package net.oneandone.httpselftest.http.socket;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.List;
 
 import net.oneandone.httpselftest.http.Headers;
@@ -51,6 +52,10 @@ public class SocketTestResponse implements TestResponse {
     @Override
     public String wireRepresentation() {
         return new String(wireBytes, StandardCharsets.UTF_8);
+    }
+
+    public byte[] getBytes() {
+        return Arrays.copyOf(wireBytes, wireBytes.length);
     }
 
 }

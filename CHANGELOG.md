@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
+- add hex response presentation
+- support for different response presentations
 
 ## [0.2.3] - 2019-05-02
 - added support for unmodifiable test-provided parameters via `TestConfigs.fixed(..)`

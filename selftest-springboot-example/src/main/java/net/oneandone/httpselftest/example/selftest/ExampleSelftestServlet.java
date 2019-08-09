@@ -10,6 +10,7 @@ import java.util.StringJoiner;
 
 import org.springframework.http.MediaType;
 
+import net.oneandone.httpselftest.http.HttpClient.Type;
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.servlet.SelftestServlet;
@@ -70,6 +71,20 @@ public class ExampleSelftestServlet extends SelftestServlet {
         @Override
         public TestRequest prepareRequest(TestValues config, Context ctx) throws Exception {
             return new TestRequest("echo", "PUT");
+        }
+
+        @Override
+        public void verify(TestValues config, TestResponse response, Context ctx) throws Exception {
+            assertEqual("status code", 200, response.getStatus());
+        }
+    }
+
+    public static class UrlConnectionTest implements TestCase {
+        @Override
+        public TestRequest prepareRequest(TestValues config, Context ctx) throws Exception {
+            TestRequest request = new TestRequest("echo", "GET");
+            request.clientType = Type.URLCON;
+            return request;
         }
 
         @Override

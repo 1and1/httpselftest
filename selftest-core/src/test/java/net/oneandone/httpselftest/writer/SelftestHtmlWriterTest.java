@@ -30,9 +30,11 @@ import org.junit.rules.TestName;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.http.TestResponse;
+import net.oneandone.httpselftest.http.socket.SocketTestResponse;
 import net.oneandone.httpselftest.http.urlcon.HttpHeader;
 import net.oneandone.httpselftest.http.urlcon.UrlConnectionRequestWireRepresentation;
 import net.oneandone.httpselftest.http.urlcon.UrlConnectionTestResponse;
@@ -243,13 +245,21 @@ public class SelftestHtmlWriterTest {
     }
 
     @Test
+    public void writeTestOutcome_urlConResponse_visual() throws Exception {
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        TestRunDataHelper.setResponse(testRun, urlConResponseWithBody("response body"));
+
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+    }
+
+    @Test
     public void writeTestOutcome_full() {
         HttpException exception = new HttpException(new RuntimeException("inner"),
                 "static string: holla die waldfee!".getBytes(StandardCharsets.UTF_8));
 
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.error(exception));
         TestRunDataHelper.setRequest(testRun, requestWithBody("request body"));
-        TestRunDataHelper.setResponse(testRun, responseWithBody("response body"));
+        TestRunDataHelper.setResponse(testRun, socketResponseWithBody("response body"));
 
         List<LogAccess> logs = logInfos("LOG1", "LOG2", "ROOT");
         logs.get(0).buffer.add(SelftestEvent.of("runId1", "simple line logger 1"));
@@ -410,12 +420,23 @@ public class SelftestHtmlWriterTest {
         return request;
     }
 
-    static TestResponse responseWithBody(String body) {
+    static TestResponse urlConResponseWithBody(String body) {
         List<HttpHeader> headers = new LinkedList<>();
         headers.add(new HttpHeader("Header1", "Value1_1"));
         headers.add(new HttpHeader("Header1", "Value1_2"));
         headers.add(new HttpHeader("Header2", "Value2"));
         return new UrlConnectionTestResponse(302, "HTTP/1.1 200 OK (synthetic)", headers, body);
+    }
+
+    static TestResponse socketResponseWithBody(String body) {
+        Headers headers = new Headers();
+        headers.add("Header1", "Value1_1");
+        headers.add("Header1", "Value1_2");
+        headers.add("Header2", "Value2");
+
+        SocketTestResponse response = new SocketTestResponse(302, headers, body);
+        ReflectionTestUtils.setField(response, "wireBytes", body.getBytes());
+        return response;
     }
 
     @SuppressWarnings("rawtypes")

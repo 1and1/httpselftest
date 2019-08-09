@@ -30,8 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.TestRequest;
@@ -65,6 +67,16 @@ public class SelftestHtmlWriter extends SelfTestWriter {
     static final long SECONDS_PER_HOUR = 60 * SECONDS_PER_MINUTE;
 
     static final long SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
+
+    private static final List<HttpContentParser> CONTENT_PARSERS;
+
+    // FIXME add form-urlencoded parser
+    // FIXME add json parser
+    static {
+        CONTENT_PARSERS = new ArrayList<>();
+        CONTENT_PARSERS.add(new HttpParserPlain());
+        CONTENT_PARSERS.add(new HttpParserRaw());
+    }
 
     public SelftestHtmlWriter(PrintWriter w) {
         super(w);
@@ -173,8 +185,9 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("<style>");
         writeDirect("  :root { --darkred: #c00; --darkorange: #d70; }");
         writeDirect("  body { margin: 10px; padding: 0; background-color: #444; color: #ccc; "
-                + " font-family: Verdana, Arial, sans-serif; font-size: 14px; }");
+                + " font-family: Verdana, Arial, sans-serif; font-size: 12px; }");
         writeDirect("  h2 { margin: 5px; font-size: 19px; }");
+        writeDirect("  h3 { font-size: 15px; }");
         writeDirect("  input { padding: 3px; margin: 1px 3px; border: 0; background-color: #202020; color: #bbb; "
                 + " border-radius: 3px; }");
         writeDirect("  .fixed { color: #999; }");
@@ -193,15 +206,17 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  .group { margin: 12px 0px; padding: 4px 6px; background-color: #222; color: #bbb; "
                 + " border-radius: 3px; }");
         writeDirect("  div.mono.log > *:hover { background-image: linear-gradient(to right, #222, #0e4dab); }");
-        writeDirect("  .group > * { font-family: 'Ubuntu Mono', monospace; }");
+        writeDirect("  .group > * { font-family: monospace; }");
         writeDirect("  .group h2, .group h3 { font-family: Verdana, Arial, sans-serif; }");
-        writeDirect("  span.mono { font-family: 'Ubuntu Mono', monospace; }");
+        writeDirect("  span.mono { font-family: monospace; }");
+
         writeDirect("  .testcase { border-left-width: 14px; border-left-style: solid; }");
         writeDirect("  .test-error { border-left-color: var(--darkred); }");
         writeDirect("  .test-failure { border-left-color: var(--darkorange); }");
         writeDirect("  .test-success { border-left-color: #3a3; }");
         writeDirect("  .test-success.warn { border-left-color: #a9b630; }");
         writeDirect("  .test-unrun   { border-left-color: #888; }");
+
         writeDirect("  .indicator-inactive { display: none; }");
         writeDirect("  .indicator { float: right; border-radius: 3px; margin: 0 2px; "
                 + "padding: 2px 8px; line-height: 16px; font-size: 16px; color: black; }");
@@ -210,19 +225,31 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  .indicator.warnlogs { background-color: var(--darkorange); }");
         writeDirect("  .indicator.slowresponse { background-color: grey; }");
         writeDirect("  .indicator.logoverflow { background-color: #b610b6; }"); // purple
+
         writeDirect("  div.mono > div > * { text-indent: -20px; display: inline-block; margin-left: 20px; }");
+
         writeDirect("  .js .group div.contents { display: none; }");
         writeDirect("  .js .group.open div.contents { display: block; }");
         writeDirect("  .js .group.nonempty h2 { cursor: pointer; }");
         writeDirect("  .js h2 .caret { display: inline-block; width: 0px; height: 0; margin: 0 4px; vertical-align: middle;");
         writeDirect("   border-top: 6px solid; border-right: 6px solid transparent; border-left: 6px solid transparent; }");
         writeDirect("  .js h2:hover .caret { margin-top: 3px; }");
+
         writeDirect("  .level-trace { color: #777; }");
         writeDirect("  .level-debug { color: #777; }");
         writeDirect("  .level-info  { }"); // default color
         writeDirect("  .level-warn  { color: var(--darkorange); }");
         writeDirect("  .level-error { color: var(--darkred); }");
         writeDirect("  .level-fatal { color: var(--darkred); }");
+
+        writeDirect("  body:not(.js) .responseToggle { display: none; }");
+        writeDirect("  body:not(.js) .responseContent ~ .responseContent { display: none; }");
+        writeDirect("  .responseToggle { padding: 2px 5px; margin-left: 5px; background-color: #fff2; border-radius: 3px; "
+                + "font-family: monospace; cursor: pointer; font-size: 12px; }");
+        writeDirect("  .responseToggle.active { color: white; }");
+        writeDirect("  .js .responseContent:not(.active) { display: none; }");
+
+        writeDirect("  ");
         writeDirect("</style>");
     }
 
@@ -231,6 +258,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("<script>");
         writeDirect("document.querySelector('body').classList.add('js')");
         writeDirect("document.querySelector('body').onclick = function(evt) {");
+
+        // test case collapsing
         writeDirect("   var closestH2 = evt.target;");
         writeDirect("   while(closestH2 != null && closestH2.nodeName != 'H2' ) {");
         writeDirect("     closestH2 = closestH2.parentNode");
@@ -244,6 +273,19 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("         group.classList.add('open')");
         writeDirect("      }");
         writeDirect("   }");
+
+        // response content switching
+        writeDirect("  if (evt.target.classList.contains('responseToggle')) {");
+        writeDirect("    var toggleNode = evt.target;");
+        writeDirect("    var tag = toggleNode.textContent;");
+        writeDirect("    var contentsNode = toggleNode.parentNode.parentNode; // -> h3 -> .contents");
+        writeDirect("    contentsNode.querySelectorAll('.active').forEach(function(child) {");
+        writeDirect("      child.classList.remove('active');");
+        writeDirect("    });");
+        writeDirect("    toggleNode.classList.add('active');");
+        writeDirect("    contentsNode.querySelector('.responseContent.' + tag).classList.add('active');");
+        writeDirect("  }");
+
         writeDirect("}");
         writeDirect("</script>");
     }
@@ -380,12 +422,53 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         }
     }
 
+    static class Pair<L, R> {
+        public final L left;
+        public final R right;
+
+        public Pair(L left, R right) {
+            this.left = left;
+            this.right = right;
+        }
+    }
+
     private static List<DomContent> responseIfExistsAsDom(TestResponse response) {
-        if (response != null) {
-            return listOf(h3("RESPONSE"), monospacedParagraph(response.wireRepresentation()));
-        } else {
+        if (response == null) {
             return Collections.emptyList();
         }
+
+        List<Pair<String, String>> parsedContents = CONTENT_PARSERS.stream() //
+                .map(parser -> new Pair<>(parser.id(), parser.parse(response))) //
+                .filter(pair -> pair.right.isPresent()) //
+                .map(pair -> new Pair<>(pair.left, pair.right.get())) //
+                .collect(Collectors.toList());
+
+        AtomicBoolean first = new AtomicBoolean(true);
+        List<DomContent> parserTags = parsedContents.stream() //
+                .map(pair -> span(pair.left) //
+                        .withClass("responseToggle") //
+                        .withCondClass(first.getAndSet(false), "active responseToggle")) //
+                .collect(Collectors.toList());
+
+        first.set(true);
+        List<DomContent> responseParagraphs = parsedContents.stream() //
+                .map(pair -> div() //
+                        .withClass("responseContent " + pair.left) //
+                        .withCondClass(first.getAndSet(false), "active responseContent " + pair.left) //
+                        .with(monospacedParagraph(pair.right))) //
+                .collect(Collectors.toList());
+
+        List<DomContent> headerElements = new LinkedList<>();
+        headerElements.add(span("RESPONSE"));
+        headerElements.addAll(parserTags);
+
+        ContainerTag header = h3(concat(headerElements));
+
+        List<DomContent> responseBlock = new LinkedList<>();
+        responseBlock.add(header);
+        responseBlock.addAll(responseParagraphs);
+
+        return responseBlock;
     }
 
     private static List<DomContent> partialResponseIfExistsAsDom(Exception e) {

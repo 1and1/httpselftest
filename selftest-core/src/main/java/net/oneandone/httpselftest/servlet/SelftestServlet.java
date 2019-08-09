@@ -99,6 +99,7 @@ public abstract class SelftestServlet extends HttpServlet {
             return;
         }
 
+        resp.setCharacterEncoding("UTF-8");
         final SelfTestWriter writer;
 
         if (req.getHeader("Accept") != null && req.getHeader("Accept").contains("application/json")) {
