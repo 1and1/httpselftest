@@ -28,7 +28,6 @@ public class BoundedInMemoryAppender<E> extends ContextAwareBase implements Appe
 
     private final Map<String, SynchronousLogBuffer> buffers;
 
-
     public BoundedInMemoryAppender(Set<String> runIds, String requestIdHolder) {
         buffers = runIds.stream().collect(toMap(id -> id, id -> new SynchronousLogBuffer()));
         this.requestIdHolder = requestIdHolder;

@@ -1,7 +1,7 @@
-package net.oneandone.httpselftest.http.socket;
+package net.oneandone.httpselftest.http;
 
-import static net.oneandone.httpselftest.common.Constants.X_REQUEST_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static net.oneandone.httpselftest.http.UrlConnectionHttpClient.appendAvoidingDuplicateSlash;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,37 +12,34 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import net.oneandone.httpselftest.http.Headers;
-import net.oneandone.httpselftest.http.HttpClient;
-import net.oneandone.httpselftest.http.HttpException;
-import net.oneandone.httpselftest.http.TestRequest;
+import net.oneandone.httpselftest.common.Pair;
 
 public class SocketHttpClient implements HttpClient {
 
     @Override
-    public SocketTestResponse call(String baseUrl, TestRequest request, String runId, int timeoutMillis) {
+    public WrappedResponse call(String baseUrl, WrappedRequest requestw, int timeoutMillis) {
         try (Socket socket = new Socket()) {
+            TestRequest request = requestw.request;
             checkMethodCharset(request.method);
             checkPathCharset(request.path);
             checkHeadersCharset(request.headers);
 
-            URL endpoint = new URL(baseUrl);
+            URL endpoint = new URL(appendAvoidingDuplicateSlash(baseUrl, request.path));
 
             int port = endpoint.getPort();
             if (port < 0) {
                 throw new IllegalArgumentException("no port provided: " + baseUrl);
             }
             String hostname = endpoint.getHost();
-            String prefix = endpoint.getPath();
+            String path = endpoint.getPath();
 
             socket.connect(new InetSocketAddress(hostname, port), timeoutMillis);
             socket.setSoTimeout(timeoutMillis);
 
-            sendRequest(socket.getOutputStream(), hostname, port, prefix, request, runId);
+            sendRequest(socket.getOutputStream(), hostname, port, path, request, requestw);
             return parseResponse(capturedInputStream(socket.getInputStream()), request.method);
         } catch (HttpException e) {
             throw e;
@@ -51,38 +48,40 @@ public class SocketHttpClient implements HttpClient {
         }
     }
 
-    private static void sendRequest(OutputStream out, String host, int port, String pathPrefix, TestRequest request, String runId)
-            throws IOException {
-        byte[] requestBytes = prepareRequest(host, port, pathPrefix, request, runId);
-        request.addWireRepresentation(new SocketRequestWireRepresentation(requestBytes));
-        out.write(requestBytes);
+    private static void sendRequest(OutputStream out, String host, int port, String path, TestRequest request,
+            WrappedRequest wrapper) throws IOException {
+        Pair<byte[], byte[]> requestBytes = prepareRequest(host, port, path, request);
+        wrapper.details = new WireBasedHttpDetails(requestBytes.left, requestBytes.right);
+
+        out.write(requestBytes.left);
+        if (requestBytes.right != null) {
+            out.write(requestBytes.right);
+        }
         out.flush();
     }
 
-    private static byte[] prepareRequest(String hostname, int port, String pathPrefix, TestRequest request, String runId) {
-        String path = pathPrefix + request.path;
+    private static Pair<byte[], byte[]> prepareRequest(String hostname, int port, String path, TestRequest request) {
+        Bytes headerBytes = new Bytes();
 
-        Bytes bytes = new Bytes();
+        headerBytes.appendLine(request.method + " " + path + " " + "HTTP/1.1");
 
-        bytes.appendLine(request.method + " " + path + " " + "HTTP/1.1");
+        headerBytes.appendLine("Host: " + hostname + ":" + port);
 
-        bytes.appendLine("Host: " + hostname + ":" + port);
-        request.headers.entrySet().forEach(header -> bytes.appendLine(header.getKey() + ": " + header.getValue()));
-        bytes.appendLine(X_REQUEST_ID + ": " + runId);
+        request.headers.stream().forEach(pair -> headerBytes.appendLine(pair.left + ": " + pair.right));
 
         if (request.body == null) {
-            bytes.appendCrLf();
+            headerBytes.appendCrLf();
+            return new Pair<>(headerBytes.toArray(), null);
         } else {
             byte[] bodyBytes = request.body.getBytes(UTF_8);
-            bytes.appendLine("Content-Length: " + bodyBytes.length);
-            bytes.appendCrLf();
-            bytes.append(bodyBytes);
-        }
+            headerBytes.appendLine("Content-Length: " + bodyBytes.length);
+            headerBytes.appendCrLf();
 
-        return bytes.toArray();
+            return new Pair<>(headerBytes.toArray(), bodyBytes);
+        }
     }
 
-    private static SocketTestResponse parseResponse(CapturingInputStream in, String requestMethod) throws HttpException {
+    private static WrappedResponse parseResponse(CapturingInputStream in, String requestMethod) throws HttpException {
         try {
 
             List<String> headerList = consumeHeaders(in);
@@ -108,10 +107,9 @@ public class SocketHttpClient implements HttpClient {
             }
             String body = new String(bodyBytes, UTF_8);
 
-            SocketTestResponse response = new SocketTestResponse(statusCode, headers, body);
-            response.headerBytes = headerBytes;
-            response.bodyBytes = bodyBytes;
-            return response;
+            TestResponse response = new TestResponse(statusCode, headers, body);
+            HttpDetails responseDetails = new WireBasedHttpDetails(headerBytes, bodyBytes);
+            return new WrappedResponse(response, responseDetails);
         } catch (Exception e) {
             throw new HttpException(e, in.readBytes());
         }
@@ -268,11 +266,11 @@ public class SocketHttpClient implements HttpClient {
         checkCharset(path, c -> ' ' <= c && c <= '~');
     }
 
-    private void checkHeadersCharset(Map<String, String> headers) {
+    private void checkHeadersCharset(Headers headers) {
         if (headers != null) {
-            headers.entrySet().stream().forEach(header -> {
-                checkPathCharset(header.getKey());
-                checkPathCharset(header.getValue());
+            headers.stream().forEach(pair -> {
+                checkPathCharset(pair.left);
+                checkPathCharset(pair.right);
             });
         }
     }

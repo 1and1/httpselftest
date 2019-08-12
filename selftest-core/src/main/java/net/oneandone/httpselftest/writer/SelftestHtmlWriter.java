@@ -35,13 +35,19 @@ import java.util.function.BiPredicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import j2html.TagCreator;
+import j2html.tags.ContainerTag;
+import j2html.tags.DomContent;
+import net.oneandone.httpselftest.common.Pair;
+import net.oneandone.httpselftest.http.Headers;
+import net.oneandone.httpselftest.http.HttpDetails;
 import net.oneandone.httpselftest.http.HttpException;
-import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.parser.HttpContentParser;
-import net.oneandone.httpselftest.http.parser.FormEntityParser;
-import net.oneandone.httpselftest.http.parser.PlainEntityParser;
-import net.oneandone.httpselftest.http.parser.HexdumpHttpParser;
-import net.oneandone.httpselftest.http.FullTestResponse;
+import net.oneandone.httpselftest.http.WrappedRequest;
+import net.oneandone.httpselftest.http.WrappedResponse;
+import net.oneandone.httpselftest.http.parser.FormEntityPresenter;
+import net.oneandone.httpselftest.http.parser.HexdumpHttpPresenter;
+import net.oneandone.httpselftest.http.parser.HttpPresenter;
+import net.oneandone.httpselftest.http.parser.PlainEntityPresenter;
 import net.oneandone.httpselftest.log.EventRenderer;
 import net.oneandone.httpselftest.log.LogDetails;
 import net.oneandone.httpselftest.log.SelftestEvent;
@@ -51,10 +57,6 @@ import net.oneandone.httpselftest.test.run.ResultType;
 import net.oneandone.httpselftest.test.run.SimpleContext;
 import net.oneandone.httpselftest.test.run.TestRunData;
 import net.oneandone.httpselftest.test.run.TestRunResult;
-
-import j2html.TagCreator;
-import j2html.tags.ContainerTag;
-import j2html.tags.DomContent;
 
 public class SelftestHtmlWriter extends SelfTestWriter {
 
@@ -72,14 +74,14 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     static final long SECONDS_PER_DAY = 24 * SECONDS_PER_HOUR;
 
-    private static final List<HttpContentParser> CONTENT_PARSERS;
+    private static final List<HttpPresenter> CONTENT_PRESENTERS;
 
     // FIXME add json parser
     static {
-        CONTENT_PARSERS = new ArrayList<>();
-        CONTENT_PARSERS.add(new PlainEntityParser());
-        CONTENT_PARSERS.add(new HexdumpHttpParser());
-        CONTENT_PARSERS.add(new FormEntityParser());
+        CONTENT_PRESENTERS = new ArrayList<>();
+        CONTENT_PRESENTERS.add(new PlainEntityPresenter());
+        CONTENT_PRESENTERS.add(new HexdumpHttpPresenter());
+        CONTENT_PRESENTERS.add(new FormEntityPresenter());
     }
 
     public SelftestHtmlWriter(PrintWriter w) {
@@ -126,7 +128,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     @Override
     public void writeTestOutcome(TestRunData testRun, List<LogDetails> logs, SimpleContext ctx) {
-        // TODO remove foreign logs logic? should be impossible now with runId separation.
+        // TODO remove foreign logs logic? should be impossible now with runId
+        // separation.
         boolean hasForeignLogs = hasLogEvent(logs, (evt, renderer) -> !testRun.runId.equals(evt.runId));
         boolean hasErrorLogs = hasLogEvent(logs, (evt, renderer) -> renderer.getLevel(evt.event).equals("ERROR"));
         boolean hasWarnLogs = hasLogEvent(logs, (evt, renderer) -> renderer.getLevel(evt.event).equals("WARN"));
@@ -246,12 +249,12 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("  .level-error { color: var(--darkred); }");
         writeDirect("  .level-fatal { color: var(--darkred); }");
 
-        writeDirect("  body:not(.js) .responseToggle { display: none; }");
-        writeDirect("  body:not(.js) .responseContent ~ .responseContent { display: none; }");
-        writeDirect("  .responseToggle { padding: 2px 5px; margin-left: 5px; background-color: #fff2; border-radius: 3px; "
+        writeDirect("  body:not(.js) .presentationToggle { display: none; }");
+        writeDirect("  body:not(.js) .presenterContent ~ .presenterContent { display: none; }");
+        writeDirect("  .presentationToggle { padding: 2px 5px; margin-left: 5px; background-color: #fff2; border-radius: 3px; "
                 + "font-family: monospace; cursor: pointer; font-size: 12px; }");
-        writeDirect("  .responseToggle.active { background-color: #fff4; }");
-        writeDirect("  .js .responseContent:not(.active) { display: none; }");
+        writeDirect("  .presentationToggle.active { background-color: #fff4; }");
+        writeDirect("  .js .presenterContent:not(.active) { display: none; }");
 
         writeDirect("  ");
         writeDirect("</style>");
@@ -278,16 +281,21 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         writeDirect("      }");
         writeDirect("   }");
 
-        // response content switching
-        writeDirect("  if (evt.target.classList.contains('responseToggle')) {");
+        // http presentation switching
+        writeDirect("  if (evt.target.classList.contains('presentationToggle')) {");
         writeDirect("    var toggleNode = evt.target;");
-        writeDirect("    var tag = toggleNode.textContent;");
-        writeDirect("    var contentsNode = toggleNode.parentNode.parentNode; // -> h3 -> .contents");
-        writeDirect("    contentsNode.querySelectorAll('.active').forEach(function(child) {");
+        writeDirect("    var presenterId = toggleNode.textContent;");
+        writeDirect("    var headerNode = toggleNode.parentNode;"); // ^ h3
+        writeDirect("    var httpNode = headerNode.nextElementSibling;"); // ~ div
+        writeDirect("    ");
+        writeDirect("    headerNode.querySelectorAll('.active').forEach(function(child) {");
+        writeDirect("      child.classList.remove('active');");
+        writeDirect("    });");
+        writeDirect("    httpNode.querySelectorAll('.active').forEach(function(child) {");
         writeDirect("      child.classList.remove('active');");
         writeDirect("    });");
         writeDirect("    toggleNode.classList.add('active');");
-        writeDirect("    contentsNode.querySelector('.responseContent.' + tag).classList.add('active');");
+        writeDirect("    httpNode.querySelector('.presenterContent.' + presenterId).classList.add('active');");
         writeDirect("  }");
 
         writeDirect("}");
@@ -382,7 +390,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return div(pieces.toArray(new DomContent[0]));
     }
 
-    // TODO the abstraction of this method broke over time. try to separate url parsing from runId handling.
+    // TODO the abstraction of this method broke over time. try to separate url
+    // parsing from runId handling.
     private static DomContent urlHighlightedTextBlock(String testRunId, String eventRunId, String paragraph, String logLevel) {
         List<DomContent> lines = new ArrayList<>();
         for (String line : paragraph.split("\\n")) {
@@ -418,31 +427,23 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         }
     }
 
-    private static List<DomContent> requestIfExistsAsDom(TestRequest request) {
-        if (request != null) {
-            return listOf(h3("REQUEST"), monospacedParagraph(request.wireRepresentation()));
-        } else {
+    private static List<DomContent> requestIfExistsAsDom(WrappedRequest wrapper) {
+        if (wrapper == null) {
             return Collections.emptyList();
         }
+        return httpBlockAsDom("REQUEST", wrapper.request.getHeaders(), wrapper.getDetails());
     }
 
-    static class Pair<L, R> {
-        public final L left;
-        public final R right;
-
-        public Pair(L left, R right) {
-            this.left = left;
-            this.right = right;
-        }
-    }
-
-    private static List<DomContent> responseIfExistsAsDom(FullTestResponse response) {
-        if (response == null) {
+    private static List<DomContent> responseIfExistsAsDom(WrappedResponse wrapper) {
+        if (wrapper == null) {
             return Collections.emptyList();
         }
+        return httpBlockAsDom("RESPONSE", wrapper.response.getHeaders(), wrapper.responseDetails);
+    }
 
-        List<Pair<String, String>> parsedContents = CONTENT_PARSERS.stream() //
-                .map(parser -> new Pair<>(parser.id(), parser.parse(response))) //
+    private static List<DomContent> httpBlockAsDom(String blockName, Headers headers, HttpDetails details) {
+        List<Pair<String, String>> parsedContents = CONTENT_PRESENTERS.stream() //
+                .map(presenter -> parseCatchingExceptions(presenter, headers, details)) //
                 .filter(pair -> pair.right.isPresent()) //
                 .map(pair -> new Pair<>(pair.left, pair.right.get())) //
                 .collect(Collectors.toList());
@@ -450,29 +451,39 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         AtomicBoolean first = new AtomicBoolean(true);
         List<DomContent> parserTags = parsedContents.stream() //
                 .map(pair -> span(pair.left) //
-                        .withClass("responseToggle") //
-                        .withCondClass(first.getAndSet(false), "active responseToggle")) //
+                        .withClass("presentationToggle") //
+                        .withCondClass(first.getAndSet(false), "active presentationToggle")) //
                 .collect(Collectors.toList());
 
         first.set(true);
         List<DomContent> responseParagraphs = parsedContents.stream() //
                 .map(pair -> div() //
-                        .withClass("responseContent " + pair.left) //
-                        .withCondClass(first.getAndSet(false), "active responseContent " + pair.left) //
+                        .withClass("presenterContent " + pair.left) //
+                        .withCondClass(first.getAndSet(false), "active presenterContent " + pair.left) //
                         .with(monospacedParagraph(pair.right))) //
                 .collect(Collectors.toList());
 
         List<DomContent> headerElements = new LinkedList<>();
-        headerElements.add(span("RESPONSE"));
+        headerElements.add(span(blockName));
         headerElements.addAll(parserTags);
 
         ContainerTag header = h3(concat(headerElements));
 
-        List<DomContent> responseBlock = new LinkedList<>();
-        responseBlock.add(header);
-        responseBlock.addAll(responseParagraphs);
+        List<DomContent> httpBlock = new LinkedList<>();
+        httpBlock.add(header);
+        httpBlock.add(div(concat(responseParagraphs)));
 
-        return responseBlock;
+        return httpBlock;
+    }
+
+    private static Pair<String, Optional<String>> parseCatchingExceptions(HttpPresenter presenter, Headers headers,
+            HttpDetails details) {
+        try {
+            Optional<String> presentation = presenter.parse(headers, details);
+            return new Pair<>(presenter.id(), presentation);
+        } catch (RuntimeException e) {
+            return new Pair<>(presenter.id(), Optional.empty());
+        }
     }
 
     private static List<DomContent> partialResponseIfExistsAsDom(Exception e) {
@@ -481,7 +492,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                 byte[] bytes = ((HttpException) e).getBytes();
                 String partialResponse = new String(bytes, StandardCharsets.UTF_8);
                 return listOf(h3("PARTIAL RESPONSE UNTIL EXCEPTION"), monospacedParagraph(partialResponse));
-            } catch (RuntimeException e2) { // NOSONAR the message is used
+            } catch (RuntimeException e2) {
                 return listOf(h3("EXCEPTION DURING PARTIAL RESPONSE HANDLING: " + e2.getMessage()));
             }
         } else {
@@ -603,7 +614,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
     private static String stacktraceAsString(Exception e) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw, true);
-        e.printStackTrace(pw); // NOSONAR
+        e.printStackTrace(pw);
         return sw.getBuffer().toString();
     }
 }

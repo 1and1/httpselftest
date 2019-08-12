@@ -24,6 +24,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.core.Appender;
+import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.log.LogAccess;
 import net.oneandone.httpselftest.log.LogSupport;
@@ -31,7 +32,6 @@ import net.oneandone.httpselftest.log.logback.LogbackSupport;
 import net.oneandone.httpselftest.test.api.Context;
 import net.oneandone.httpselftest.test.api.TestCase;
 import net.oneandone.httpselftest.test.api.TestConfigs;
-import net.oneandone.httpselftest.test.api.TestResponse;
 import net.oneandone.httpselftest.test.api.TestValues;
 
 @RunWith(MockitoJUnitRunner.StrictStubs.class)

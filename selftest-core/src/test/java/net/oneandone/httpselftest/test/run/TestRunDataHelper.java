@@ -1,9 +1,7 @@
 package net.oneandone.httpselftest.test.run;
 
-import net.oneandone.httpselftest.http.FullTestResponse;
-import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.test.run.TestRunData;
-import net.oneandone.httpselftest.test.run.TestRunResult;
+import net.oneandone.httpselftest.http.WrappedRequest;
+import net.oneandone.httpselftest.http.WrappedResponse;
 
 public class TestRunDataHelper {
 
@@ -15,12 +13,12 @@ public class TestRunDataHelper {
         data.result = result;
     }
 
-    public static void setRequest(TestRunData data, TestRequest request) {
-        data.request = request;
+    public static void setRequest(TestRunData data, WrappedRequest request) {
+        data.wrappedRequest = request;
     }
 
-    public static void setResponse(TestRunData data, FullTestResponse response) {
-        data.response = response;
+    public static void setResponse(TestRunData data, WrappedResponse response) {
+        data.wrappedResponse = response;
     }
 
     public static void setMaxDurationMillis(TestRunData data, int maxDuration) {

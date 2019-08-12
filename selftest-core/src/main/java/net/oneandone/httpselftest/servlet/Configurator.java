@@ -2,13 +2,13 @@ package net.oneandone.httpselftest.servlet;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
-import static net.oneandone.httpselftest.common.Constants.X_REQUEST_ID;
 import static net.oneandone.httpselftest.servlet.SelftestServlet.PROP_CONFIGGROUPS;
 import static net.oneandone.httpselftest.servlet.SelftestServlet.PROP_CREDENTIALS;
 import static net.oneandone.httpselftest.servlet.SelftestServlet.PROP_LOGGER;
 import static net.oneandone.httpselftest.servlet.SelftestServlet.PROP_OVERRIDE_MDC_KEY;
 import static net.oneandone.httpselftest.servlet.SelftestServlet.PROP_OVERRIDE_PATH;
 import static net.oneandone.httpselftest.servlet.SelftestServlet.PROP_OVERRIDE_PORT;
+import static net.oneandone.httpselftest.test.run.TestRunner.X_REQUEST_ID;
 
 import java.util.Arrays;
 import java.util.List;

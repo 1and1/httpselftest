@@ -122,8 +122,7 @@ public abstract class SelftestServlet extends HttpServlet {
         }
     }
 
-    // visible for testing
-    void get(HttpServletRequest req, final SelfTestWriter writer) {
+    private void get(HttpServletRequest req, final SelfTestWriter writer) {
         final TestConfigs configs = getConfigs();
         final String callerIp = req.getRemoteAddr();
         writer.writePageStart(configs, relevantConfigIds(configs, req), determineValuesForGet(req, configs), servletName(req),
@@ -133,8 +132,7 @@ public abstract class SelftestServlet extends HttpServlet {
         writer.writeUnrunTests(tests);
     }
 
-    // visible for testing
-    void post(HttpServletRequest req, final SelfTestWriter writer) {
+    private void post(HttpServletRequest req, final SelfTestWriter writer) {
         final TestConfigs configs = getConfigs();
         final String callerIp = req.getRemoteAddr();
 

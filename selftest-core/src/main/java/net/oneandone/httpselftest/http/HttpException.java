@@ -9,13 +9,11 @@ public class HttpException extends RuntimeException {
         this.readBytes = readBytes;
     }
 
-    // only needed for HttpUrlConnection client
     public HttpException(Exception e) {
         super(e);
         readBytes = null;
     }
 
-    // only needed for HttpUrlConnection client
     public HttpException(String message) {
         super(message);
         readBytes = null;

@@ -3,13 +3,12 @@ package net.oneandone.httpselftest.log.logback;
 import java.time.Instant;
 import java.util.Optional;
 
-import net.oneandone.httpselftest.log.EventRenderer;
-
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Layout;
+import net.oneandone.httpselftest.log.EventRenderer;
 
-public class LogbackEventRenderer extends EventRenderer {
+public class LogbackEventRenderer implements EventRenderer {
 
     private final Optional<Layout<ILoggingEvent>> layout;
 

@@ -1,6 +1,4 @@
-package net.oneandone.httpselftest.http.urlcon;
-
-import static net.oneandone.httpselftest.common.Constants.X_REQUEST_ID;
+package net.oneandone.httpselftest.http;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -9,25 +7,23 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedList;
-import java.util.List;
-
-import net.oneandone.httpselftest.http.HttpClient;
-import net.oneandone.httpselftest.http.HttpException;
-import net.oneandone.httpselftest.http.TestRequest;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class UrlConnectionHttpClient implements HttpClient {
 
     @Override
-    public UrlConnectionTestResponse call(String baseUrl, TestRequest request, String runId, int timeout) {
+    public WrappedResponse call(String baseUrl, WrappedRequest requestw, int timeout) {
 
+        TestRequest request = requestw.request;
         if (request.method.equalsIgnoreCase("GET") && request.body != null) {
             throw new IllegalArgumentException("Request body must be null for method GET");
         }
+        rejectMultiHeaders(request.headers);
 
-        String finalUrl = computePath(baseUrl, request);
-        request.addWireRepresentation(new UrlConnectionRequestWireRepresentation(request, finalUrl));
-        request.headers.put(X_REQUEST_ID, runId);
+        String finalUrl = appendAvoidingDuplicateSlash(baseUrl, request.path);
 
         URL endpoint = null;
         HttpURLConnection conn = null;
@@ -36,7 +32,8 @@ public class UrlConnectionHttpClient implements HttpClient {
             conn = (HttpURLConnection) endpoint.openConnection();
             conn.setConnectTimeout(timeout);
             conn.setReadTimeout(timeout);
-            prepareAndSendRequest(request, conn);
+
+            prepareAndSendRequest(request, conn, finalUrl, requestw);
             return parseResponse(conn);
         } catch (HttpException e) {
             throw e;
@@ -49,7 +46,8 @@ public class UrlConnectionHttpClient implements HttpClient {
         }
     }
 
-    private static void prepareAndSendRequest(TestRequest request, HttpURLConnection conn) throws IOException {
+    private static void prepareAndSendRequest(TestRequest request, HttpURLConnection conn, String finalUrl,
+            WrappedRequest requestw) throws IOException {
         conn.setInstanceFollowRedirects(false);
         conn.setDoInput(true);
 
@@ -58,8 +56,10 @@ public class UrlConnectionHttpClient implements HttpClient {
 
         // headers
         if (request.headers != null) {
-            request.headers.entrySet().forEach(pair -> conn.setRequestProperty(pair.getKey(), pair.getValue()));
+            request.headers.stream().forEach(pair -> conn.setRequestProperty(pair.left, pair.right));
         }
+
+        requestw.details = new DataBasedHttpDetails(request.method + " " + finalUrl, request.headers, request.body);
 
         // body
         if (request.body != null) {
@@ -71,7 +71,7 @@ public class UrlConnectionHttpClient implements HttpClient {
         }
     }
 
-    private static UrlConnectionTestResponse parseResponse(HttpURLConnection conn) throws IOException {
+    private static WrappedResponse parseResponse(HttpURLConnection conn) throws IOException {
         int statusCode = conn.getResponseCode();
         if (statusCode < 0) {
             throw new HttpException("could not parse status line: " + conn.getHeaderFieldKey(0) + "->" + conn.getHeaderField(0));
@@ -83,17 +83,17 @@ public class UrlConnectionHttpClient implements HttpClient {
         }
 
         // parse headers
-        List<HttpHeader> headers = new LinkedList<>();
+        Headers headers = new Headers();
         String firstLineKey = conn.getHeaderFieldKey(0);
         if (firstLineKey != null) {
-            headers.add(new HttpHeader(firstLineKey, conn.getHeaderField(0)));
+            headers.add(firstLineKey, conn.getHeaderField(0));
         }
         for (int i = 1;; i++) {
             String headerField = conn.getHeaderField(i);
             if (headerField == null) {
                 break;
             }
-            headers.add(new HttpHeader(conn.getHeaderFieldKey(i), headerField));
+            headers.add(conn.getHeaderFieldKey(i), headerField);
         }
 
         // parse body if present
@@ -110,7 +110,9 @@ public class UrlConnectionHttpClient implements HttpClient {
             }
         }
 
-        return new UrlConnectionTestResponse(statusCode, statusLine, headers, body);
+        DataBasedHttpDetails responseDetails = new DataBasedHttpDetails(statusLine, headers, body);
+        TestResponse response = new TestResponse(statusCode, headers, body);
+        return new WrappedResponse(response, responseDetails);
     }
 
     private static String consume(InputStream in, String charset) throws IOException {
@@ -123,13 +125,26 @@ public class UrlConnectionHttpClient implements HttpClient {
         return out.toString(charset);
     }
 
-    private static String computePath(String baseUrl, TestRequest request) {
+    private void rejectMultiHeaders(Headers headers) {
+        Map<String, Long> headerCounts =
+                headers.stream().collect(Collectors.groupingBy(pair -> pair.left.toLowerCase(), Collectors.counting()));
+        Optional<Entry<String, Long>> duplicateHeader =
+                headerCounts.entrySet().stream().filter(entry -> entry.getValue() > 1).findFirst();
+        if (duplicateHeader.isPresent()) {
+            throw new IllegalArgumentException(
+                    UrlConnectionHttpClient.class.getSimpleName() + " does not support sending the same Header multiple times. "
+                            + "If necessary, concatenate values with commas or use another client. Header in question: "
+                            + duplicateHeader.get().getKey());
+        }
+    }
+
+    public static String appendAvoidingDuplicateSlash(String baseUrl, String requestPath) {
         StringBuilder base = new StringBuilder(baseUrl);
-        if (base.charAt(base.length() - 1) == '/') {
+        if (base.length() > 0 && base.charAt(base.length() - 1) == '/') {
             base.deleteCharAt(base.length() - 1);
         }
-        StringBuilder path = new StringBuilder(request.path);
-        if (path.charAt(0) == '/') {
+        StringBuilder path = new StringBuilder(requestPath);
+        if (path.length() > 0 && path.charAt(0) == '/') {
             path.deleteCharAt(0);
         }
 

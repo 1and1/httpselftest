@@ -2,7 +2,7 @@ package net.oneandone.httpselftest.http;
 
 public interface HttpClient {
 
-    FullTestResponse call(String baseUrl, TestRequest request, String runId, int timeoutMillis);
+    WrappedResponse call(String baseUrl, WrappedRequest request, int timeoutMillis);
 
     enum Type {
         URLCON, SOCKET;

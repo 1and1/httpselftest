@@ -10,10 +10,12 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpClient;
+import net.oneandone.httpselftest.http.SocketHttpClient;
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.socket.SocketHttpClient;
-import net.oneandone.httpselftest.http.urlcon.UrlConnectionHttpClient;
+import net.oneandone.httpselftest.http.UrlConnectionHttpClient;
+import net.oneandone.httpselftest.http.WrappedRequest;
 import net.oneandone.httpselftest.log.LogAccess;
 import net.oneandone.httpselftest.log.LogSupport;
 import net.oneandone.httpselftest.test.api.AssertionException;
@@ -23,6 +25,8 @@ import net.oneandone.httpselftest.test.api.TestConfigs.Values;
 import net.oneandone.httpselftest.writer.SelfTestWriter;
 
 public class TestRunner {
+
+    public static final String X_REQUEST_ID = "X-REQUEST-ID";
 
     private static final AtomicInteger EXECUTION_COUNTER = new AtomicInteger(0);
 
@@ -80,29 +84,38 @@ public class TestRunner {
         testRun.logs = Collections.emptyList();
 
         try {
-            TestRequest request = testRun.request = test.prepareRequest(config, ctx);
-            invokeKeepingTime(appUrl, request, runId, testRun);
+            testRun.wrappedRequest = new WrappedRequest(test.prepareRequest(config, ctx));
+            addRunId(testRun.wrappedRequest.request.headers, runId);
+
+            invokeKeepingTime(appUrl, testRun.wrappedRequest, testRun);
 
             sleep(clamped(test.waitForLogsMillis()));
             testRun.logs = LogAccess.snapshot(buffersForRunId);
 
             try {
-                test.verify(config, testRun.response.getTestResponse(), ctx);
+                test.verify(config, testRun.wrappedResponse.response, ctx);
                 testRun.result = TestRunResult.success();
-            } catch (AssertionException e) { // NOSONAR
+            } catch (AssertionException e) {
                 testRun.result = TestRunResult.failure(e.getMessage());
             }
-        } catch (Exception e) { // NOSONAR
+        } catch (Exception e) {
             testRun.result = TestRunResult.error(e);
         }
 
         return testRun;
     }
 
-    private static void invokeKeepingTime(String appUrl, TestRequest request, final String runId, final TestRunData testRun) {
+    private static void addRunId(Headers headers, String runId) {
+        if (headers.get(X_REQUEST_ID) != null) {
+            throw new IllegalStateException("Header " + X_REQUEST_ID + " must no be set by test case.");
+        }
+        headers.add(X_REQUEST_ID, runId);
+    }
+
+    private static void invokeKeepingTime(String appUrl, WrappedRequest reqWrapper, final TestRunData testRun) {
         long timeBefore = System.nanoTime();
         try {
-            testRun.response = getClient(request).call(appUrl, request, runId, 3000);
+            testRun.wrappedResponse = getClient(reqWrapper.request).call(appUrl, reqWrapper, 3000);
         } finally {
             testRun.durationMillis = (System.nanoTime() - timeBefore) / 1_000_000;
         }
@@ -133,7 +146,7 @@ public class TestRunner {
 
     private static void sleep(int millis) {
         try {
-            Thread.sleep(millis); // NOSONAR
+            Thread.sleep(millis);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

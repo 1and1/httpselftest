@@ -2,11 +2,13 @@ package net.oneandone.httpselftest.http.parser;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
+import java.util.List;
 import java.util.Optional;
 
-import net.oneandone.httpselftest.http.FullTestResponse;
+import net.oneandone.httpselftest.http.Headers;
+import net.oneandone.httpselftest.http.HttpDetails;
 
-public class FormEntityParser implements HttpContentParser {
+public class FormEntityPresenter implements HttpPresenter {
 
     @Override
     public String id() {
@@ -14,22 +16,18 @@ public class FormEntityParser implements HttpContentParser {
     }
 
     @Override
-    public Optional<String> parse(FullTestResponse resp) {
-        String contentType = resp.getTestResponse().getHeader("Content-Type");
-        if (contentType == null || !contentType.contains("application/x-www-form-urlencoded")) {
+    public Optional<String> parse(Headers headers, HttpDetails details) {
+        List<String> contentType = headers.get("Content-Type");
+        if (contentType == null || contentType.size() != 1 || !contentType.get(0).contains("application/x-www-form-urlencoded")) {
             return Optional.empty();
         }
-        String body = resp.bodyBlock();
+        String body = details.bodyBlock();
         if (body == null || body.isEmpty()) {
             return Optional.empty();
         }
 
-        try {
-            String parsedBody = convertUrlEncodedForm(body);
-            return Optional.of(resp.headerBlock() + parsedBody);
-        } catch (RuntimeException e) {
-            return Optional.empty();
-        }
+        String parsedBody = convertUrlEncodedForm(body);
+        return Optional.of(details.headerBlock() + parsedBody);
     }
 
     private String convertUrlEncodedForm(String body) {
@@ -53,7 +51,7 @@ public class FormEntityParser implements HttpContentParser {
         try {
             return URLDecoder.decode(string, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(e); // should never happen
         }
     }
 

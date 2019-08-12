@@ -4,12 +4,12 @@ import static net.oneandone.httpselftest.example.resource.NoLoggerResource.FIRST
 import static net.oneandone.httpselftest.example.resource.NoLoggerResource.LASTNAME;
 import static net.oneandone.httpselftest.test.util.Assertions.assertEqual;
 
+import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.http.TestRequest;
 import net.oneandone.httpselftest.servlet.SelftestServlet;
 import net.oneandone.httpselftest.test.api.Context;
 import net.oneandone.httpselftest.test.api.TestCase;
 import net.oneandone.httpselftest.test.api.TestConfigs;
-import net.oneandone.httpselftest.test.api.TestResponse;
 import net.oneandone.httpselftest.test.api.TestValues;
 
 public class NoLoggerSelftestServlet extends SelftestServlet {

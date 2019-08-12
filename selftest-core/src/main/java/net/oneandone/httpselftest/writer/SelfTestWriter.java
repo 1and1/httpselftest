@@ -23,9 +23,7 @@ public abstract class SelfTestWriter {
     public abstract void writePageEnd();
 
     public abstract void writePageStart(TestConfigs configs, Set<String> relevantConfigIds, TestConfigs.Values paramsToUse,
-                                        String servletName,
-                                        String testsBaseUrl, Instant lastTestRun, String callerIp,
-                                        String lastTestrunIp);
+            String servletName, String testsBaseUrl, Instant lastTestRun, String callerIp, String lastTestrunIp);
 
     public abstract void writeTestOutcome(TestRunData testRun, List<LogDetails> logs, SimpleContext ctx);
 

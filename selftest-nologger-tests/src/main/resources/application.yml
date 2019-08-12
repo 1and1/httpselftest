@@ -9,4 +9,3 @@ selftest:
   override:
     port: 8080
     contextpath: /
-

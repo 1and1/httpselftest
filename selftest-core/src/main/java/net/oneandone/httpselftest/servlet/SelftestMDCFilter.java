@@ -1,6 +1,6 @@
 package net.oneandone.httpselftest.servlet;
 
-import static net.oneandone.httpselftest.common.Constants.X_REQUEST_ID;
+import static net.oneandone.httpselftest.test.run.TestRunner.X_REQUEST_ID;
 
 import java.io.IOException;
 

@@ -14,11 +14,6 @@ import java.util.Set;
 
 import org.slf4j.LoggerFactory;
 
-import net.oneandone.httpselftest.log.EventRenderer;
-import net.oneandone.httpselftest.log.LogAccess;
-import net.oneandone.httpselftest.log.LogSupport;
-import net.oneandone.httpselftest.log.SynchronousLogBuffer;
-
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.net.SyslogAppender;
@@ -28,6 +23,10 @@ import ch.qos.logback.core.Layout;
 import ch.qos.logback.core.OutputStreamAppender;
 import ch.qos.logback.core.encoder.Encoder;
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
+import net.oneandone.httpselftest.log.EventRenderer;
+import net.oneandone.httpselftest.log.LogAccess;
+import net.oneandone.httpselftest.log.LogSupport;
+import net.oneandone.httpselftest.log.SynchronousLogBuffer;
 
 public class LogbackSupport implements LogSupport {
 
@@ -79,7 +78,7 @@ public class LogbackSupport implements LogSupport {
         }
     }
 
-    // this is hopefully never needed. it is there for the case that something unexpected breaks in logback in QA or LIVE.
+    // this is hopefully never needed. it is there for the case that something unexpected breaks in logback.
     public static void abortIfBroken(List<Exception> exceptions) {
         if (exceptions != null && !exceptions.isEmpty()) {
             StringBuilder msg = new StringBuilder("Refusing operation. There were logback exceptions. Please investigate.\n");

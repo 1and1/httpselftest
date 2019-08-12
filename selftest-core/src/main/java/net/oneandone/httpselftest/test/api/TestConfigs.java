@@ -79,7 +79,6 @@ public class TestConfigs {
         assertThat(id != null, "Config id must not be null.");
         assertThat(!configsMap.containsKey(id), "Config for id '" + id + "' already exists.");
         assertThat(parameterValues != null, "Parameter values must not be null.");
-        @SuppressWarnings("null")
         boolean correctSize = parameterValues.length == allParameterNames.size();
         assertThat(correctSize, "Invalid number of parameter values. Expected " + allParameterNames.size() + ", got "
                 + parameterValues.length + ".");

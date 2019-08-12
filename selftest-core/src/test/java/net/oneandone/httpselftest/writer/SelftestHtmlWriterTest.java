@@ -1,5 +1,7 @@
 package net.oneandone.httpselftest.writer;
 
+import static java.util.stream.Collectors.joining;
+import static net.oneandone.httpselftest.http.TestHttpHelper.stream;
 import static net.oneandone.httpselftest.log.LogAccess.snapshot;
 import static net.oneandone.httpselftest.log.SelftestEvent.of;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,15 +32,25 @@ import org.junit.rules.TestName;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.classic.spi.LoggingEvent;
+import ch.qos.logback.core.Appender;
+import ch.qos.logback.core.Layout;
+import ch.qos.logback.core.OutputStreamAppender;
+import ch.qos.logback.core.encoder.Encoder;
+import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
+import j2html.tags.DomContent;
+import net.oneandone.httpselftest.http.DataBasedHttpDetails;
 import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpException;
+import net.oneandone.httpselftest.http.TestHttpHelper;
 import net.oneandone.httpselftest.http.TestRequest;
-import net.oneandone.httpselftest.http.FullTestResponse;
-import net.oneandone.httpselftest.http.socket.SocketTestResponse;
-import net.oneandone.httpselftest.http.urlcon.HttpHeader;
-import net.oneandone.httpselftest.http.urlcon.UrlConnectionRequestWireRepresentation;
-import net.oneandone.httpselftest.http.urlcon.UrlConnectionTestResponse;
-import net.oneandone.httpselftest.log.EventRenderer;
+import net.oneandone.httpselftest.http.TestResponse;
+import net.oneandone.httpselftest.http.WireBasedHttpDetails;
+import net.oneandone.httpselftest.http.WrappedRequest;
+import net.oneandone.httpselftest.http.WrappedResponse;
+import net.oneandone.httpselftest.log.EventRendererStub;
 import net.oneandone.httpselftest.log.LogAccess;
 import net.oneandone.httpselftest.log.SelftestEvent;
 import net.oneandone.httpselftest.log.SynchronousLogBuffer;
@@ -51,16 +63,6 @@ import net.oneandone.httpselftest.test.run.SimpleContext;
 import net.oneandone.httpselftest.test.run.TestRunData;
 import net.oneandone.httpselftest.test.run.TestRunDataHelper;
 import net.oneandone.httpselftest.test.run.TestRunResult;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.LoggingEvent;
-import ch.qos.logback.core.Appender;
-import ch.qos.logback.core.Layout;
-import ch.qos.logback.core.OutputStreamAppender;
-import ch.qos.logback.core.encoder.Encoder;
-import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
-import j2html.tags.DomContent;
 
 public class SelftestHtmlWriterTest {
 
@@ -245,20 +247,9 @@ public class SelftestHtmlWriterTest {
     }
 
     @Test
-    public void writeTestOutcome_responseParserRaw() throws Exception {
-        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
-        TestRunDataHelper.setResponse(testRun, socketResponseWithBody("response body"));
-
-        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
-
-        String html = out.written();
-        assertThat(html).contains("raw", "00000010");
-    }
-
-    @Test
     public void writeTestOutcome_urlConResponse() throws Exception {
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
-        TestRunDataHelper.setResponse(testRun, urlConResponseWithBody("response body"));
+        TestRunDataHelper.setResponse(testRun, dataBasedResponseWithBody("response body"));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
@@ -267,15 +258,31 @@ public class SelftestHtmlWriterTest {
     }
 
     @Test
-    public void writeTestOutcome_formEncoding() throws Exception {
+    public void writeTestOutcome_rawPresentation() throws Exception {
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
-        TestRunDataHelper.setResponse(testRun,
-                formResponse("key=value" + "&" + "encodedk%65y=encodedv%61l%75e" + "&" + "masked=aa%26bb%25cc%3ddd"));
+        TestRunDataHelper.setRequest(testRun, wireBasedRequestWithBody("request body"));
+        TestRunDataHelper.setResponse(testRun, wireBasedResponseWithBody("response body"));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
         String html = out.written();
-        assertThat(html).contains("key = value", "encodedkey = encodedvalue", "masked = aa&amp;bb%cc=dd");
+        assertThat(html).contains("raw", "request␣body", "response␣body");
+    }
+
+    @Test
+    public void writeTestOutcome_formPresentation() throws Exception {
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        String form = "key=value" + "&" + "encodedk%65y=encodedv%61l%75e" + "&" + "masked=aa%26bb%25cc%3ddd" + "&"
+                + "valueAbsent=" + "&" + "keyOnly";
+
+        TestRunDataHelper.setRequest(testRun, formRequest(form + "&request"));
+        TestRunDataHelper.setResponse(testRun, formResponse(form + "&response"));
+
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+
+        String html = out.written();
+        assertThat(html).contains("key = value", "encodedkey = encodedvalue", "masked = aa&amp;bb%cc=dd", ">valueAbsent = <",
+                "<span>keyOnly</span>");
     }
 
     @Test
@@ -285,7 +292,7 @@ public class SelftestHtmlWriterTest {
 
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.error(exception));
         TestRunDataHelper.setRequest(testRun, requestWithBody("request body"));
-        TestRunDataHelper.setResponse(testRun, socketResponseWithBody("response body"));
+        TestRunDataHelper.setResponse(testRun, wireBasedResponseWithBody("response body"));
 
         List<LogAccess> logs = logInfos("LOG1", "LOG2", "ROOT");
         logs.get(0).buffer.add(SelftestEvent.of("runId1", "simple line logger 1"));
@@ -314,8 +321,8 @@ public class SelftestHtmlWriterTest {
         Layout<ILoggingEvent> layout = getStdOutPatternFromConfig();
 
         List<LogAccess> logs = new LinkedList<>();
-        logs.add(new LogAccess(names(), singleBuffer, new EventRenderer()));
-        logs.add(new LogAccess(names("ROOT"), singleBuffer, new EventRenderer()));
+        logs.add(new LogAccess(names(), singleBuffer, new EventRendererStub()));
+        logs.add(new LogAccess(names("ROOT"), singleBuffer, new EventRendererStub()));
         logs.add(new LogAccess(names("LOGBACK", "NOLAYOUT"), singleBuffer, new LogbackEventRenderer(Optional.empty())));
         logs.add(new LogAccess(names("LOGBACK", "WITHLAYOUT"), singleBuffer, new LogbackEventRenderer(Optional.of(layout))));
 
@@ -409,7 +416,7 @@ public class SelftestHtmlWriterTest {
         List<LogAccess> logs = new LinkedList<>();
         if (logNames != null) {
             for (String logName : logNames) {
-                logs.add(new LogAccess(names(logName), new SynchronousLogBuffer(), new EventRenderer()));
+                logs.add(new LogAccess(names(logName), new SynchronousLogBuffer(), new EventRendererStub()));
             }
         }
         return logs;
@@ -435,48 +442,62 @@ public class SelftestHtmlWriterTest {
         return testRun;
     }
 
-    static TestRequest requestWithBody(String body) {
-        HashMap<String, String> headers = new HashMap<>();
-        headers.put("Header1", "Value1");
-        headers.put("Header2", "Value2");
-        headers.put("Content-Type", "application/x-dooper");
-        TestRequest request = new TestRequest("some/path/", "POST", headers, body);
-        request.addWireRepresentation(
-                new UrlConnectionRequestWireRepresentation(request, "http://some.base.url:1234/context/ (synthetic)"));
-        return request;
-    }
-
-    static FullTestResponse urlConResponseWithBody(String body) {
-        List<HttpHeader> headers = new LinkedList<>();
-        headers.add(new HttpHeader("Header1", "Value1_1"));
-        headers.add(new HttpHeader("Header1", "Value1_2"));
-        headers.add(new HttpHeader("Header2", "Value2"));
-        return new UrlConnectionTestResponse(302, "HTTP/1.1 200 OK (synthetic)", headers, body);
-    }
-
-    static FullTestResponse formResponse(String body) {
+    static WrappedRequest requestWithBody(String body) {
+        String path = "/synthetic/path/";
         Headers headers = new Headers();
-        headers.add("Content-Type", "application/x-www-form-urlencoded;charset:utf-8");
+        headers.add("Header1", "Value1");
+        headers.add("Header2", "Value2");
+        headers.add("Content-Type", "application/x-dooper");
 
-        SocketTestResponse response = new SocketTestResponse(302, headers, body);
-        response.headerBytes = "static header\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-        response.bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-        return response;
+        WrappedRequest wrapper = new WrappedRequest(new TestRequest(path, "POST", headers, body));
+        TestHttpHelper.setDetails(wrapper, new DataBasedHttpDetails("GET " + path + " HTTP/1.1 (synthetic)", headers, body));
+        return wrapper;
     }
 
-    static FullTestResponse socketResponseWithBody(String body) {
+    static WrappedResponse dataBasedResponseWithBody(String body) {
         Headers headers = new Headers();
         headers.add("Header1", "Value1_1");
         headers.add("Header1", "Value1_2");
         headers.add("Header2", "Value2");
 
-        SocketTestResponse response = new SocketTestResponse(302, headers, body);
-        response.headerBytes = "static header\r\n\r\n".getBytes(StandardCharsets.US_ASCII);
-        response.bodyBytes = body.getBytes(StandardCharsets.UTF_8);
-        return response;
+        TestResponse response = new TestResponse(200, headers, body);
+        DataBasedHttpDetails details = new DataBasedHttpDetails("HTTP/1.1 200 OK (synthetic)", headers, body);
+        return new WrappedResponse(response, details);
     }
 
-    @SuppressWarnings("rawtypes")
+    static WrappedRequest formRequest(String body) {
+        Headers headers = new Headers();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset:utf-8");
+
+        String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
+        TestRequest request = new TestRequest("/path", "GET", headers, body);
+        WireBasedHttpDetails details =
+                new WireBasedHttpDetails(headerBlock.getBytes(StandardCharsets.US_ASCII), body.getBytes(StandardCharsets.UTF_8));
+        WrappedRequest wrapped = new WrappedRequest(request);
+        TestHttpHelper.setDetails(wrapped, details);
+        return wrapped;
+    }
+
+    static WrappedResponse formResponse(String body) {
+        Headers headers = new Headers();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset:utf-8");
+
+        String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
+        TestResponse response = new TestResponse(302, headers, body);
+        WireBasedHttpDetails details =
+                new WireBasedHttpDetails(headerBlock.getBytes(StandardCharsets.US_ASCII), body.getBytes(StandardCharsets.UTF_8));
+        return new WrappedResponse(response, details);
+    }
+
+    static WrappedRequest wireBasedRequestWithBody(String body) {
+        return formRequest(body);
+    }
+
+    static WrappedResponse wireBasedResponseWithBody(String body) {
+        return formResponse(body);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
     private Layout<ILoggingEvent> getStdOutPatternFromConfig() {
         ch.qos.logback.classic.Logger logger = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("ROOT");
         List<Appender<?>> attachedAppenders = LogbackSupport.attachedAppenders(logger);

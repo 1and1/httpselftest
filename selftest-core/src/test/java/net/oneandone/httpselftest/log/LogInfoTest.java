@@ -14,8 +14,8 @@ public class LogInfoTest {
     public void snapshotWorksOnMultipleAppenders() throws Exception {
         SynchronousLogBuffer theOnlyBuffer = new SynchronousLogBuffer();
         theOnlyBuffer.add(SelftestEvent.of("runId", "log msg"));
-        LogAccess log1 = new LogAccess(Collections.singletonList("appender1"), theOnlyBuffer, new EventRenderer());
-        LogAccess log2 = new LogAccess(Collections.singletonList("appender2"), theOnlyBuffer, new EventRenderer());
+        LogAccess log1 = new LogAccess(Collections.singletonList("appender1"), theOnlyBuffer, new EventRendererStub());
+        LogAccess log2 = new LogAccess(Collections.singletonList("appender2"), theOnlyBuffer, new EventRendererStub());
 
         List<LogDetails> snapshot = LogAccess.snapshot(Arrays.asList(new LogAccess[] { log1, log2 }));
 

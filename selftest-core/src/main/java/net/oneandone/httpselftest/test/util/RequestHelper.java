@@ -25,7 +25,7 @@ public final class RequestHelper {
         try {
             return URLEncoder.encode(value, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e); // NOSONAR should never happen
+            throw new RuntimeException(e); //  should never happen
         }
     }
 

@@ -7,6 +7,7 @@ import org.junit.Test;
 public class TestRequestTest {
 
     @Test
+    @SuppressWarnings("unused") // just testing for no exception
     public void minimal() throws Exception {
         new TestRequest("path", "method");
     }

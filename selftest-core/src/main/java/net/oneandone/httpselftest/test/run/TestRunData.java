@@ -3,8 +3,8 @@ package net.oneandone.httpselftest.test.run;
 import java.time.Instant;
 import java.util.List;
 
-import net.oneandone.httpselftest.http.FullTestResponse;
-import net.oneandone.httpselftest.http.TestRequest;
+import net.oneandone.httpselftest.http.WrappedRequest;
+import net.oneandone.httpselftest.http.WrappedResponse;
 import net.oneandone.httpselftest.log.LogDetails;
 
 public final class TestRunData {
@@ -15,8 +15,8 @@ public final class TestRunData {
 
     long durationMillis;
     TestRunResult result;
-    TestRequest request;
-    FullTestResponse response;
+    WrappedRequest wrappedRequest;
+    WrappedResponse wrappedResponse;
     List<LogDetails> logs;
     int maxDuration;
 
@@ -34,12 +34,12 @@ public final class TestRunData {
         return result;
     }
 
-    public TestRequest getRequest() {
-        return request;
+    public WrappedRequest getRequest() {
+        return wrappedRequest;
     }
 
-    public FullTestResponse getResponse() {
-        return response;
+    public WrappedResponse getResponse() {
+        return wrappedResponse;
     }
 
     public int getMaxDurationMillis() {

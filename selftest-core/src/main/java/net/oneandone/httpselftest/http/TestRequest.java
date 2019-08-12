@@ -2,23 +2,17 @@ package net.oneandone.httpselftest.http;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.HashMap;
 import java.util.Map;
-
-import net.oneandone.httpselftest.http.HttpClient.Type;
 
 public class TestRequest {
 
     // provided by the test case
     public final String path;
     public final String method;
-    public final Map<String, String> headers;
+    public final Headers headers;
     public final String body;
 
-    // collected by client during call
-    private WireRepresentation wireRepresentation;
-
-    public HttpClient.Type clientType = Type.SOCKET; // default
+    public HttpClient.Type clientType = HttpClient.Type.SOCKET; // default
 
     /**
      * Create a request without significant headers and without body. See {@link #TestRequest(String, String, Map, String)}.
@@ -27,7 +21,7 @@ public class TestRequest {
      * @param method the HTTP verb
      */
     public TestRequest(String path, String method) {
-        this(path, method, null, null);
+        this(path, method, new Headers(), null);
     }
 
     /**
@@ -37,7 +31,7 @@ public class TestRequest {
      * @param method  the HTTP verb
      * @param headers a map of HTTP headers to values
      */
-    public TestRequest(String path, String method, Map<String, String> headers) {
+    public TestRequest(String path, String method, Headers headers) {
         this(path, method, headers, null);
     }
 
@@ -53,22 +47,19 @@ public class TestRequest {
      * @param headers a map of HTTP headers to values
      * @param body    the body
      */
-    public TestRequest(String path, String method, Map<String, String> headers, String body) {
+    public TestRequest(String path, String method, Headers headers, String body) {
         requireNonNull(path, "Request path may not be null");
         requireNonNull(method, "Request method may not be null");
+        requireNonNull(headers, "Request headers may not be null");
 
         this.path = path;
         this.method = method;
-        this.headers = headers != null ? new HashMap<>(headers) : new HashMap<>();
+        this.headers = headers;
         this.body = body;
     }
 
-    public void addWireRepresentation(WireRepresentation wireRepresentation) {
-        this.wireRepresentation = wireRepresentation;
-    }
-
-    public String wireRepresentation() {
-        return wireRepresentation == null ? "nothing sent" : wireRepresentation.stringValue();
+    public Headers getHeaders() {
+        return headers;
     }
 
 }
