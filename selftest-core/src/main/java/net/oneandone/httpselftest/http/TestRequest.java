@@ -2,8 +2,6 @@ package net.oneandone.httpselftest.http;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Map;
-
 public class TestRequest {
 
     // provided by the test case
