@@ -44,10 +44,11 @@ import net.oneandone.httpselftest.http.HttpDetails;
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.WrappedRequest;
 import net.oneandone.httpselftest.http.WrappedResponse;
-import net.oneandone.httpselftest.http.parser.FormEntityPresenter;
-import net.oneandone.httpselftest.http.parser.HexdumpHttpPresenter;
-import net.oneandone.httpselftest.http.parser.HttpPresenter;
-import net.oneandone.httpselftest.http.parser.PlainEntityPresenter;
+import net.oneandone.httpselftest.http.presenter.FormEntityPresenter;
+import net.oneandone.httpselftest.http.presenter.HexdumpHttpPresenter;
+import net.oneandone.httpselftest.http.presenter.HttpPresenter;
+import net.oneandone.httpselftest.http.presenter.JsonEntityPresenter;
+import net.oneandone.httpselftest.http.presenter.PlainEntityPresenter;
 import net.oneandone.httpselftest.log.EventRenderer;
 import net.oneandone.httpselftest.log.LogDetails;
 import net.oneandone.httpselftest.log.SelftestEvent;
@@ -76,12 +77,12 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     private static final List<HttpPresenter> CONTENT_PRESENTERS;
 
-    // FIXME add json parser
     static {
         CONTENT_PRESENTERS = new ArrayList<>();
         CONTENT_PRESENTERS.add(new PlainEntityPresenter());
         CONTENT_PRESENTERS.add(new HexdumpHttpPresenter());
         CONTENT_PRESENTERS.add(new FormEntityPresenter());
+        CONTENT_PRESENTERS.add(new JsonEntityPresenter());
     }
 
     public SelftestHtmlWriter(PrintWriter w) {

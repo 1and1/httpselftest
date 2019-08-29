@@ -1,4 +1,4 @@
-package net.oneandone.httpselftest.http.parser;
+package net.oneandone.httpselftest.http.presenter;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;

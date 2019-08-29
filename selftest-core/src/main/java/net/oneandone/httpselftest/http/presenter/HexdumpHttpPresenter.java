@@ -1,4 +1,4 @@
-package net.oneandone.httpselftest.http.parser;
+package net.oneandone.httpselftest.http.presenter;
 
 import static net.oneandone.httpselftest.http.SocketHttpClient.concat;
 

@@ -266,23 +266,36 @@ public class SelftestHtmlWriterTest {
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
         String html = out.written();
-        assertThat(html).contains("raw", "request␣body", "response␣body");
+        assertThat(html).contains("raw", "request␣body", "nse␣bod");
     }
 
     @Test
     public void writeTestOutcome_formPresentation() throws Exception {
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        String formHeader = "Content-Type: application/x-www-form-urlencoded";
         String form = "key=value" + "&" + "encodedk%65y=encodedv%61l%75e" + "&" + "masked=aa%26bb%25cc%3ddd" + "&"
                 + "valueAbsent=" + "&" + "keyOnly";
 
-        TestRunDataHelper.setRequest(testRun, formRequest(form + "&request"));
-        TestRunDataHelper.setResponse(testRun, formResponse(form + "&response"));
+        TestRunDataHelper.setRequest(testRun, requestWithBody(form + "&request", formHeader));
+        TestRunDataHelper.setResponse(testRun, responseWithBody(form + "&response", formHeader));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
         String html = out.written();
         assertThat(html).contains("key = value", "encodedkey = encodedvalue", "masked = aa&amp;bb%cc=dd", ">valueAbsent = <",
                 "<span>keyOnly</span>");
+    }
+
+    @Test
+    public void writeTestOutcome_jsonPresentation() throws Exception {
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        String json = "{\"a\":[1,2,3,],\"b\": {\"c\":1}}";
+        TestRunDataHelper.setRequest(testRun, requestWithBody(json, "Content-Type: application/json"));
+
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+
+        String html = out.written();
+        assertThat(html).contains("<span>    1,</span><br><span>    2,</span><br>");
     }
 
     @Test
@@ -442,7 +455,7 @@ public class SelftestHtmlWriterTest {
         return testRun;
     }
 
-    static WrappedRequest requestWithBody(String body) {
+    private static WrappedRequest requestWithBody(String body) {
         String path = "/synthetic/path/";
         Headers headers = new Headers();
         headers.add("Header1", "Value1");
@@ -454,7 +467,7 @@ public class SelftestHtmlWriterTest {
         return wrapper;
     }
 
-    static WrappedResponse dataBasedResponseWithBody(String body) {
+    private static WrappedResponse dataBasedResponseWithBody(String body) {
         Headers headers = new Headers();
         headers.add("Header1", "Value1_1");
         headers.add("Header1", "Value1_2");
@@ -465,9 +478,22 @@ public class SelftestHtmlWriterTest {
         return new WrappedResponse(response, details);
     }
 
-    static WrappedRequest formRequest(String body) {
+    private static WrappedRequest requestWithBody(String body, String... headerPairs) {
+        return wireBasedRequestWithBody(body, headerPairs);
+    }
+
+    private static WrappedResponse responseWithBody(String body, String... headerPairs) {
+        return wireBasedResponseWithBody(body, headerPairs);
+    }
+
+    private static WrappedRequest wireBasedRequestWithBody(String body, String... headerPairs) {
         Headers headers = new Headers();
-        headers.add("Content-Type", "application/x-www-form-urlencoded;charset:utf-8");
+        if (headerPairs != null) {
+            for (String pair : headerPairs) {
+                String[] split = pair.split(":");
+                headers.add(split[0], split[1]);
+            }
+        }
 
         String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
         TestRequest request = new TestRequest("/path", "GET", headers, body);
@@ -478,23 +504,20 @@ public class SelftestHtmlWriterTest {
         return wrapped;
     }
 
-    static WrappedResponse formResponse(String body) {
+    private static WrappedResponse wireBasedResponseWithBody(String body, String... headerPairs) {
         Headers headers = new Headers();
-        headers.add("Content-Type", "application/x-www-form-urlencoded;charset:utf-8");
+        if (headerPairs != null) {
+            for (String pair : headerPairs) {
+                String[] split = pair.split(":");
+                headers.add(split[0], split[1]);
+            }
+        }
 
         String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
         TestResponse response = new TestResponse(302, headers, body);
         WireBasedHttpDetails details =
                 new WireBasedHttpDetails(headerBlock.getBytes(StandardCharsets.US_ASCII), body.getBytes(StandardCharsets.UTF_8));
         return new WrappedResponse(response, details);
-    }
-
-    static WrappedRequest wireBasedRequestWithBody(String body) {
-        return formRequest(body);
-    }
-
-    static WrappedResponse wireBasedResponseWithBody(String body) {
-        return formResponse(body);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
