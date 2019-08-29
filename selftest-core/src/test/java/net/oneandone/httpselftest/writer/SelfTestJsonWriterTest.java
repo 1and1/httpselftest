@@ -71,4 +71,14 @@ public class SelfTestJsonWriterTest {
         assertThat(json).contains("success", "true").doesNotContain("test1", "message");
     }
 
+    @Test
+    public void writeTestOutcome_uncaughtException() {
+
+        writer.writeUncaughtException(new IllegalAccessException("chonker"));
+        writer.writePageEnd();
+
+        String json = out.written();
+        assertThat(json).contains("\"success\":false", "java.lang.IllegalAccessException", "chonker").doesNotContain("at");
+    }
+
 }

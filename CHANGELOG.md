@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
+- added uncaught exception messages to JSON response
 - added json presentation
 
 ## [0.3.0] - 2019-08-29

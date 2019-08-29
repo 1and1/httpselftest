@@ -19,10 +19,12 @@ import net.oneandone.httpselftest.test.run.TestRunData;
 public class SelfTestJsonWriter extends SelfTestWriter {
 
     public final List<TestRunData> testRunData;
+    public final List<Exception> uncaughtExceptions;
 
     public SelfTestJsonWriter(PrintWriter w) {
         super(w);
         testRunData = new ArrayList<>();
+        uncaughtExceptions = new ArrayList<>();
     }
 
     @Override
@@ -36,7 +38,8 @@ public class SelfTestJsonWriter extends SelfTestWriter {
 
     @Override
     public void writePageEnd() {
-        boolean success = testRunData.stream().allMatch(data -> data.getResult().type == ResultType.SUCCESS);
+        boolean success = uncaughtExceptions.isEmpty()
+                && testRunData.stream().allMatch(data -> data.getResult().type == ResultType.SUCCESS);
 
         JsonArray failures = testRunData.stream().filter(data -> data.getResult().type == ResultType.FAILURE)
                 .map(data -> jsonFailureOf(data.testName, data.getResult().assertionMessage))
@@ -46,7 +49,10 @@ public class SelfTestJsonWriter extends SelfTestWriter {
                 .map(data -> jsonErrorOf(data.testName, data.getResult().uncaught))
                 .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
 
-        writer.append(jsonResponseOf(success, failures, errors)).flush();
+        JsonArray exceptions =
+                uncaughtExceptions.stream().map(Exception::toString).collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+
+        writer.append(jsonResponseOf(success, failures, errors, exceptions)).flush();
     }
 
     @Override
@@ -60,18 +66,19 @@ public class SelfTestJsonWriter extends SelfTestWriter {
 
     @Override
     public void writeUncaughtException(Exception e) {
+        uncaughtExceptions.add(e);
     }
 
     @Override
     public void writeUnrunTests(List<TestCase> tests) {
     }
 
-    private static String jsonResponseOf(boolean success, JsonArray failures, JsonArray errors) {
-
+    private static String jsonResponseOf(boolean success, JsonArray failures, JsonArray errors, JsonArray exceptions) {
         JsonObject s = new JsonObject();
         s.put("success", success);
         s.put("testFailures", failures);
         s.put("testErrors", errors);
+        s.put("exceptions", exceptions);
         return s.toJson();
     }
 
