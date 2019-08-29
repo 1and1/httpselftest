@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
+
+## [0.3.0] - 2019-08-29
 - added support for different request presentations
 - added x-www-form-urlencoded presentation
 - added hex response presentation
