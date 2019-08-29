@@ -15,7 +15,7 @@ public class TestRequest {
     public HttpClient.Type clientType = HttpClient.Type.SOCKET; // default
 
     /**
-     * Create a request without significant headers and without body. See {@link #TestRequest(String, String, Map, String)}.
+     * Create a request without significant headers and without body. See {@link #TestRequest(String, String, Headers, String)}.
      *
      * @param path   the HTTP path suffix
      * @param method the HTTP verb
@@ -25,7 +25,7 @@ public class TestRequest {
     }
 
     /**
-     * Create a request without body. See {@link #TestRequest(String, String, Map, String)}.
+     * Create a request without body. See {@link #TestRequest(String, String, Headers, String)}.
      *
      * @param path    the HTTP path suffix
      * @param method  the HTTP verb
