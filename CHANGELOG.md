@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
+
+## [0.3.2] - 2019-09-05
 - fixed query parameter handling on TestRequest (broken in 0.3.0 and 0.3.1)
 - shade json-simple
 - shade j2html
