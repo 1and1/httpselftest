@@ -29,7 +29,7 @@ public abstract class SelfTestWriter {
 
     public abstract void writeText(String paragraph);
 
-    public abstract void writeUncaughtException(Exception e);
+    public abstract void writeUncaughtException(Throwable t);
 
     public abstract void writeUnrunTests(List<TestCase> tests);
 

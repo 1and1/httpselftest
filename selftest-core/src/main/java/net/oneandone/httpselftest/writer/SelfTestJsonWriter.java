@@ -19,7 +19,7 @@ import net.oneandone.httpselftest.test.run.TestRunData;
 public class SelfTestJsonWriter extends SelfTestWriter {
 
     public final List<TestRunData> testRunData;
-    public final List<Exception> uncaughtExceptions;
+    public final List<Throwable> uncaughtExceptions;
 
     public SelfTestJsonWriter(PrintWriter w) {
         super(w);
@@ -50,7 +50,7 @@ public class SelfTestJsonWriter extends SelfTestWriter {
                 .collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
 
         JsonArray exceptions =
-                uncaughtExceptions.stream().map(Exception::toString).collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
+                uncaughtExceptions.stream().map(Throwable::toString).collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
 
         writer.append(jsonResponseOf(success, failures, errors, exceptions)).flush();
     }
@@ -65,8 +65,8 @@ public class SelfTestJsonWriter extends SelfTestWriter {
     }
 
     @Override
-    public void writeUncaughtException(Exception e) {
-        uncaughtExceptions.add(e);
+    public void writeUncaughtException(Throwable t) {
+        uncaughtExceptions.add(t);
     }
 
     @Override

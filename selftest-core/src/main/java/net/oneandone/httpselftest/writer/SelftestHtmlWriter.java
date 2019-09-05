@@ -173,8 +173,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
     }
 
     @Override
-    public void writeUncaughtException(Exception e) {
-        write(h2("UNCAUGHT EXCEPTION"), div(textBlock(stacktraceAsString(e))));
+    public void writeUncaughtException(Throwable t) {
+        write(h2("UNCAUGHT EXCEPTION"), div(textBlock(stacktraceAsString(t))));
     }
 
     private void write(DomContent... all) {
@@ -612,10 +612,10 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         }
     };
 
-    private static String stacktraceAsString(Exception e) {
+    private static String stacktraceAsString(Throwable t) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw, true);
-        e.printStackTrace(pw);
+        t.printStackTrace(pw);
         return sw.getBuffer().toString();
     }
 }

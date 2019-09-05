@@ -215,6 +215,10 @@ public abstract class SelftestServlet extends HttpServlet {
         } catch (Exception e) {
             resp.setStatus(500);
             writer.writeUncaughtException(e);
+        } catch (Throwable t) {
+            resp.setStatus(500);
+            writer.writeUncaughtException(t);
+            throw t;
         } finally {
             writer.writePageEnd();
         }
