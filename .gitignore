@@ -1,11 +1,12 @@
-# Maven
+# project
 target/
+dependency-reduced-pom.xml
 
-# Eclipse
+# eclipse
 .classpath
 .project
 .settings/
 
-# Netbeans
+# netbeans
 nbproject/
 nb-configuration.xml
