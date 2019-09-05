@@ -15,29 +15,36 @@
 
     <dependencies>
 
+        <!-- assumed present -->
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>4.0.1</version>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.28</version>
-            <scope>compile</scope>
-        </dependency>
+
+        <!-- shaded -->
         <dependency>
             <groupId>com.j2html</groupId>
             <artifactId>j2html</artifactId>
             <version>1.4.0</version>
         </dependency>
+
+        <!-- shaded -->
         <dependency>
             <groupId>com.github.cliftonlabs</groupId>
             <artifactId>json-simple</artifactId>
             <version>3.1.0</version>
         </dependency>
 
+        <!-- optional logback support -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.28</version>
+            <scope>compile</scope>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -53,11 +60,17 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- Test -->
+        <!-- tests -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
+            <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -68,13 +81,7 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
-            <version>${assertj.version}</version>
-            <scope>test</scope>
-        </dependency>
-
+        <!-- for UtilityClassTestUtil -->
         <dependency>
             <groupId>net.trajano.commons</groupId>
             <artifactId>commons-testing</artifactId>
@@ -96,8 +103,7 @@
             <version>5.1.9.RELEASE</version>
             <scope>test</scope>
         </dependency>
-
-        <!-- for classes like org.springframework.http.MediaType -->
+        <!-- optional dependency of spring-test -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
@@ -123,12 +129,17 @@
                             <artifactSet>
                                 <includes>
                                     <include>com.j2html:j2html</include>
+                                    <include>com.github.cliftonlabs:json-simple</include>
                                 </includes>
                             </artifactSet>
                             <relocations>
                                 <relocation>
                                     <pattern>j2html</pattern>
                                     <shadedPattern>shaded.j2html</shadedPattern>
+                                </relocation>
+                                <relocation>
+                                    <pattern>com.github.cliftonlabs</pattern>
+                                    <shadedPattern>shaded.com.github.cliftonlabs</shadedPattern>
                                 </relocation>
                             </relocations>
                         </configuration>
