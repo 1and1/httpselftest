@@ -23,7 +23,7 @@ public class UrlConnectionHttpClient implements HttpClient {
         }
         rejectMultiHeaders(request.headers);
 
-        String finalUrl = appendAvoidingDuplicateSlash(baseUrl, request.path);
+        String finalUrl = concatAvoidingDuplicateSlash(baseUrl, request.path);
 
         URL endpoint = null;
         HttpURLConnection conn = null;
@@ -138,7 +138,7 @@ public class UrlConnectionHttpClient implements HttpClient {
         }
     }
 
-    public static String appendAvoidingDuplicateSlash(String baseUrl, String requestPath) {
+    public static String concatAvoidingDuplicateSlash(String baseUrl, String requestPath) {
         StringBuilder base = new StringBuilder(baseUrl);
         if (base.length() > 0 && base.charAt(base.length() - 1) == '/') {
             base.deleteCharAt(base.length() - 1);

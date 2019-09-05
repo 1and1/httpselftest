@@ -1,7 +1,7 @@
 package net.oneandone.httpselftest.http;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static net.oneandone.httpselftest.http.UrlConnectionHttpClient.appendAvoidingDuplicateSlash;
+import static net.oneandone.httpselftest.http.UrlConnectionHttpClient.concatAvoidingDuplicateSlash;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,14 +27,14 @@ public class SocketHttpClient implements HttpClient {
             checkPathCharset(request.path);
             checkHeadersCharset(request.headers);
 
-            URL endpoint = new URL(appendAvoidingDuplicateSlash(baseUrl, request.path));
+            URL endpoint = new URL(baseUrl);
 
             int port = endpoint.getPort();
             if (port < 0) {
-                throw new IllegalArgumentException("no port provided: " + baseUrl);
+                throw new IllegalArgumentException("No port provided: " + baseUrl);
             }
             String hostname = endpoint.getHost();
-            String path = endpoint.getPath();
+            String path = concatAvoidingDuplicateSlash(endpoint.getPath(), request.path);
 
             socket.connect(new InetSocketAddress(hostname, port), timeoutMillis);
             socket.setSoTimeout(timeoutMillis);

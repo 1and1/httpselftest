@@ -9,7 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static net.oneandone.httpselftest.http.UrlConnectionHttpClient.appendAvoidingDuplicateSlash;
+import static net.oneandone.httpselftest.http.UrlConnectionHttpClient.concatAvoidingDuplicateSlash;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -86,6 +86,16 @@ public class UrlConnectionHttpClientTest {
         assertThat(response).as("response").isNotNull();
         assertThat(response.getStatus()).as("status code").isEqualTo(200);
         assertThat(response.getBody()).as("body").isEqualTo("");
+    }
+
+    @Test
+    public void requestLayout_queryParams() {
+        socketMock.replyWith("HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n12345");
+
+        client.call(baseUrlSocket, wrapped(new TestRequest("path?key=value&toast&encoded=%5B%5D", "PUT", new Headers(), "body")),
+                1000);
+
+        assertThat(socketMock.requested()).startsWith("PUT /prefix/path?key=value&toast&encoded=%5B%5D HTTP/1.1\r\n");
     }
 
     @Test
@@ -243,6 +253,7 @@ public class UrlConnectionHttpClientTest {
     }
 
     // TODO handle absent body in client
+    // @Test
     public void responseParsing_noBody() {
         socketMock.replyWith("HTTP/1.1 200 OK\r\n\r\n");
 
@@ -255,6 +266,7 @@ public class UrlConnectionHttpClientTest {
     }
 
     // TODO handle identity encoding correctly. can this be fixed?
+    // @Test
     public void responseParsing_moreBytesThanAdvertised() {
         socketMock.replyWith("HTTP/1.1 200 OK\r\n" //
                 + "Transfer-Encoding: identity\r\n" //
@@ -293,7 +305,7 @@ public class UrlConnectionHttpClientTest {
     }
 
     @Test
-    public void responseParsing_http10() {
+    public void responseParsing_http1_0() {
         socketMock.replyWith("HTTP/1.0 200 OK\r\n" //
                 + "Transfer-Encoding: identity\r\n" //
                 + "Content-Length: 8\r\n" //
@@ -358,14 +370,14 @@ public class UrlConnectionHttpClientTest {
 
     @Test
     public void appendAvoidingDuplicateSlash_works() throws Exception {
-        assertThat(appendAvoidingDuplicateSlash("a", "b")).isEqualTo("a/b");
-        assertThat(appendAvoidingDuplicateSlash("a/", "b")).isEqualTo("a/b");
-        assertThat(appendAvoidingDuplicateSlash("a", "/b")).isEqualTo("a/b");
-        assertThat(appendAvoidingDuplicateSlash("a/", "/b")).isEqualTo("a/b");
-        assertThat(appendAvoidingDuplicateSlash("a", "")).isEqualTo("a/");
-        assertThat(appendAvoidingDuplicateSlash("", "b")).isEqualTo("/b");
-        assertThat(appendAvoidingDuplicateSlash("", "")).isEqualTo("/");
-        assertThat(appendAvoidingDuplicateSlash("//", "//")).isEqualTo("///");
+        assertThat(concatAvoidingDuplicateSlash("a", "b")).isEqualTo("a/b");
+        assertThat(concatAvoidingDuplicateSlash("a/", "b")).isEqualTo("a/b");
+        assertThat(concatAvoidingDuplicateSlash("a", "/b")).isEqualTo("a/b");
+        assertThat(concatAvoidingDuplicateSlash("a/", "/b")).isEqualTo("a/b");
+        assertThat(concatAvoidingDuplicateSlash("a", "")).isEqualTo("a/");
+        assertThat(concatAvoidingDuplicateSlash("", "b")).isEqualTo("/b");
+        assertThat(concatAvoidingDuplicateSlash("", "")).isEqualTo("/");
+        assertThat(concatAvoidingDuplicateSlash("//", "//")).isEqualTo("///");
     }
 
     private TestRequest simpleGet() {

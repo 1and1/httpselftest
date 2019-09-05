@@ -133,7 +133,7 @@ public class SocketHttpClientTest {
     }
 
     @Test
-    public void responseParsing_noBody() {
+    public void requestLayout_noBody() {
         socketMock.replyWith("HTTP/1.1 200 OK\r\n\r\n");
 
         client.call(baseUrlSocket, wrapped(new TestRequest("path", "GET")), 1000);
@@ -141,6 +141,15 @@ public class SocketHttpClientTest {
         assertThat(socketMock.requested()).isEqualTo("GET /prefix/path HTTP/1.1\r\n" //
                 + "Host: localhost:" + socketMock.port() + "\r\n" //
                 + "\r\n");
+    }
+
+    @Test
+    public void requestLayout_pathIsLeftUntouched() {
+        socketMock.replyWith("HTTP/1.1 200 OK\r\n\r\n");
+
+        client.call(baseUrlSocket, wrapped(new TestRequest("path?key=value&toast&encoded=%5B%5D#blob", "GET")), 1000);
+
+        assertThat(socketMock.requested()).startsWith("GET /prefix/path?key=value&toast&encoded=%5B%5D#blob HTTP/1.1\r\n");
     }
 
     @Test
@@ -246,10 +255,9 @@ public class SocketHttpClientTest {
 
         invoke(new TestRequest("path", "POST", headers(), expectedBody));
 
-        verify(1, anyRequestedFor(anyUrl()));
-        LoggedRequest request = sentRequest();
-        assertThat(request.getBody()).isEqualTo(expectedBody.getBytes(UTF_8));
-        assertThat(request.getHeader("Content-Length")).isEqualTo(String.valueOf(bodyLengthInUtf8));
+        LoggedRequest requested = sentRequest();
+        assertThat(requested.getBody()).isEqualTo(expectedBody.getBytes(UTF_8));
+        assertThat(requested.getHeader("Content-Length")).isEqualTo(String.valueOf(bodyLengthInUtf8));
     }
 
     @Test
@@ -411,7 +419,9 @@ public class SocketHttpClientTest {
     }
 
     private LoggedRequest sentRequest() {
-        return findAll(anyRequestedFor(anyUrl())).get(0);
+        List<LoggedRequest> sentRequests = findAll(anyRequestedFor(anyUrl()));
+        assertThat(sentRequests).as("sanity check: number of requests sent").hasSize(1);
+        return sentRequests.get(0);
     }
 
     private TestRequest simpleGet() {
