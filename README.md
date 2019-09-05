@@ -59,6 +59,12 @@ mvn spring-boot:run
 </dependency>
 ```
 
+### Dependencies
+- Since HTTP Selftest is implemented as a Servlet, there is an implicit dependency on the javax Servlet API.
+- HTML rendering is done using [j2html](https://j2html.com/). The dependency is co-packaged and shaded to avoid conflicts with production dependencies.
+- JSON handling is done using [json-simple](https://cliftonlabs.github.io/json-simple/). The dependency is co-packaged and shaded to avoid conflicts with production dependencies.
+- In case [Logback](https://logback.qos.ch/) logging support is used, logback dependencies need to be on the classpath (`logback-classic` and `logback-core`).
+
 ### Security
 The servlet is not supposed to be exposed to the internet. This is an internal developer tool.
 
