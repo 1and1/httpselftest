@@ -8,7 +8,7 @@ import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpDetails;
 import net.oneandone.httpselftest.http.WireBasedHttpDetails;
 
-public class HexdumpHttpPresenter implements HttpPresenter {
+public class RawHttpPresenter implements HttpPresenter {
 
     @Override
     public String id() {

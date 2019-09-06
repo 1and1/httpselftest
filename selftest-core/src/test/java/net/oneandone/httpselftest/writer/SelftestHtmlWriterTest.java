@@ -1,5 +1,7 @@
 package net.oneandone.httpselftest.writer;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.joining;
 import static net.oneandone.httpselftest.http.TestHttpHelper.stream;
 import static net.oneandone.httpselftest.log.LogAccess.snapshot;
@@ -31,6 +33,7 @@ import org.junit.Test;
 import org.junit.rules.TestName;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.springframework.util.StringUtils;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -43,6 +46,7 @@ import ch.qos.logback.core.encoder.LayoutWrappingEncoder;
 import j2html.tags.DomContent;
 import net.oneandone.httpselftest.http.DataBasedHttpDetails;
 import net.oneandone.httpselftest.http.Headers;
+import net.oneandone.httpselftest.http.HttpDetails;
 import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.TestHttpHelper;
 import net.oneandone.httpselftest.http.TestRequest;
@@ -249,12 +253,22 @@ public class SelftestHtmlWriterTest {
     @Test
     public void writeTestOutcome_urlConResponse() throws Exception {
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
-        TestRunDataHelper.setResponse(testRun, dataBasedResponseWithBody("response body"));
+        TestRunDataHelper.setResponse(testRun,
+                dataBasedResponseWithBody("response body", "Header1: Value1_1", "Header1: Value1_2", "Header2: Value2"));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
         String html = out.written();
+        assertThat(html).doesNotContain("presentationToggle"); // no toggle if only one presenter worked
         assertThat(html).doesNotContain("raw", "00000010"); // raw parser not active on urlConResponse
+    }
+
+    @Test
+    public void writeTestOutcome_urlConResponse_json() throws Exception {
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        TestRunDataHelper.setResponse(testRun, dataBasedResponseWithBody("{\"a\":1}", "Content-Type: application/json"));
+
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
     }
 
     @Test
@@ -299,12 +313,33 @@ public class SelftestHtmlWriterTest {
     }
 
     @Test
+    public void writeTestOutcome_singleNonPlainPresenter() throws Exception {
+        HttpDetails breakingPlainPresenter = new WireBasedHttpDetails("(header)".getBytes(US_ASCII), "(body)".getBytes(UTF_8)) {
+            @Override
+            public String headerBlock() {
+                throw new IllegalArgumentException("synthetic");
+            }
+        };
+        TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
+        WrappedResponse response = wireBasedResponseWithBody("response body");
+        ReflectionTestUtils.setField(response, "responseDetails", breakingPlainPresenter);
+        TestRunDataHelper.setResponse(testRun, response);
+
+        // test
+        writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
+
+        String html = out.written();
+        assertThat(html).contains("presentationToggle", "raw").doesNotContain("plain", "json");
+        assertThat(StringUtils.countOccurrencesOf(html, "presentationToggle")).as("#presentationToggle").isEqualTo(1);
+    }
+
+    @Test
     public void writeTestOutcome_full() {
         HttpException exception = new HttpException(new RuntimeException("inner"),
                 "static string: holla die waldfee!".getBytes(StandardCharsets.UTF_8));
 
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.error(exception));
-        TestRunDataHelper.setRequest(testRun, requestWithBody("request body"));
+        TestRunDataHelper.setRequest(testRun, requestWithBody("request body", "Header: Value"));
         TestRunDataHelper.setResponse(testRun, wireBasedResponseWithBody("response body"));
 
         List<LogAccess> logs = logInfos("LOG1", "LOG2", "ROOT");
@@ -455,24 +490,8 @@ public class SelftestHtmlWriterTest {
         return testRun;
     }
 
-    private static WrappedRequest requestWithBody(String body) {
-        String path = "/synthetic/path/";
-        Headers headers = new Headers();
-        headers.add("Header1", "Value1");
-        headers.add("Header2", "Value2");
-        headers.add("Content-Type", "application/x-dooper");
-
-        WrappedRequest wrapper = new WrappedRequest(new TestRequest(path, "POST", headers, body));
-        TestHttpHelper.setDetails(wrapper, new DataBasedHttpDetails("GET " + path + " HTTP/1.1 (synthetic)", headers, body));
-        return wrapper;
-    }
-
-    private static WrappedResponse dataBasedResponseWithBody(String body) {
-        Headers headers = new Headers();
-        headers.add("Header1", "Value1_1");
-        headers.add("Header1", "Value1_2");
-        headers.add("Header2", "Value2");
-
+    private static WrappedResponse dataBasedResponseWithBody(String body, String... headerPairs) {
+        Headers headers = toHeaders(headerPairs);
         TestResponse response = new TestResponse(200, headers, body);
         DataBasedHttpDetails details = new DataBasedHttpDetails("HTTP/1.1 200 OK (synthetic)", headers, body);
         return new WrappedResponse(response, details);
@@ -487,14 +506,7 @@ public class SelftestHtmlWriterTest {
     }
 
     private static WrappedRequest wireBasedRequestWithBody(String body, String... headerPairs) {
-        Headers headers = new Headers();
-        if (headerPairs != null) {
-            for (String pair : headerPairs) {
-                String[] split = pair.split(":");
-                headers.add(split[0], split[1]);
-            }
-        }
-
+        Headers headers = toHeaders(headerPairs);
         String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
         TestRequest request = new TestRequest("/path", "GET", headers, body);
         WireBasedHttpDetails details =
@@ -505,6 +517,16 @@ public class SelftestHtmlWriterTest {
     }
 
     private static WrappedResponse wireBasedResponseWithBody(String body, String... headerPairs) {
+        Headers headers = toHeaders(headerPairs);
+
+        String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
+        TestResponse response = new TestResponse(302, headers, body);
+        WireBasedHttpDetails details =
+                new WireBasedHttpDetails(headerBlock.getBytes(StandardCharsets.US_ASCII), body.getBytes(StandardCharsets.UTF_8));
+        return new WrappedResponse(response, details);
+    }
+
+    private static Headers toHeaders(String... headerPairs) {
         Headers headers = new Headers();
         if (headerPairs != null) {
             for (String pair : headerPairs) {
@@ -512,12 +534,7 @@ public class SelftestHtmlWriterTest {
                 headers.add(split[0], split[1]);
             }
         }
-
-        String headerBlock = stream(headers).map(pair -> pair.left + ": " + pair.right).collect(joining("\r\n")) + "\r\n\r\n";
-        TestResponse response = new TestResponse(302, headers, body);
-        WireBasedHttpDetails details =
-                new WireBasedHttpDetails(headerBlock.getBytes(StandardCharsets.US_ASCII), body.getBytes(StandardCharsets.UTF_8));
-        return new WrappedResponse(response, details);
+        return headers;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })

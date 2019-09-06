@@ -45,10 +45,10 @@ import net.oneandone.httpselftest.http.HttpException;
 import net.oneandone.httpselftest.http.WrappedRequest;
 import net.oneandone.httpselftest.http.WrappedResponse;
 import net.oneandone.httpselftest.http.presenter.FormEntityPresenter;
-import net.oneandone.httpselftest.http.presenter.HexdumpHttpPresenter;
+import net.oneandone.httpselftest.http.presenter.RawHttpPresenter;
 import net.oneandone.httpselftest.http.presenter.HttpPresenter;
 import net.oneandone.httpselftest.http.presenter.JsonEntityPresenter;
-import net.oneandone.httpselftest.http.presenter.PlainEntityPresenter;
+import net.oneandone.httpselftest.http.presenter.PlainHttpPresenter;
 import net.oneandone.httpselftest.log.EventRenderer;
 import net.oneandone.httpselftest.log.LogDetails;
 import net.oneandone.httpselftest.log.SelftestEvent;
@@ -79,8 +79,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     static {
         CONTENT_PRESENTERS = new ArrayList<>();
-        CONTENT_PRESENTERS.add(new PlainEntityPresenter());
-        CONTENT_PRESENTERS.add(new HexdumpHttpPresenter());
+        CONTENT_PRESENTERS.add(new PlainHttpPresenter());
+        CONTENT_PRESENTERS.add(new RawHttpPresenter());
         CONTENT_PRESENTERS.add(new FormEntityPresenter());
         CONTENT_PRESENTERS.add(new JsonEntityPresenter());
     }
@@ -129,8 +129,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
     @Override
     public void writeTestOutcome(TestRunData testRun, List<LogDetails> logs, SimpleContext ctx) {
-        // TODO remove foreign logs logic? should be impossible now with runId
-        // separation.
+        // TODO remove foreign logs logic? should be impossible now with runId separation.
         boolean hasForeignLogs = hasLogEvent(logs, (evt, renderer) -> !testRun.runId.equals(evt.runId));
         boolean hasErrorLogs = hasLogEvent(logs, (evt, renderer) -> renderer.getLevel(evt.event).equals("ERROR"));
         boolean hasWarnLogs = hasLogEvent(logs, (evt, renderer) -> renderer.getLevel(evt.event).equals("WARN"));
@@ -391,8 +390,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return div(pieces.toArray(new DomContent[0]));
     }
 
-    // TODO the abstraction of this method broke over time. try to separate url
-    // parsing from runId handling.
+    // TODO the abstraction of this method broke over time. try to separate url parsing from runId handling.
     private static DomContent urlHighlightedTextBlock(String testRunId, String eventRunId, String paragraph, String logLevel) {
         List<DomContent> lines = new ArrayList<>();
         for (String line : paragraph.split("\\n")) {
@@ -449,6 +447,8 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                 .map(pair -> new Pair<>(pair.left, pair.right.get())) //
                 .collect(Collectors.toList());
 
+        boolean defaultWorked = parsedContents.stream().anyMatch(pair -> pair.left.equals(CONTENT_PRESENTERS.get(0).id()));
+
         AtomicBoolean first = new AtomicBoolean(true);
         List<DomContent> parserTags = parsedContents.stream() //
                 .map(pair -> span(pair.left) //
@@ -466,7 +466,9 @@ public class SelftestHtmlWriter extends SelfTestWriter {
 
         List<DomContent> headerElements = new LinkedList<>();
         headerElements.add(span(blockName));
-        headerElements.addAll(parserTags);
+        if (parserTags.size() > 1 || !defaultWorked) {
+            headerElements.addAll(parserTags);
+        }
 
         ContainerTag header = h3(concat(headerElements));
 

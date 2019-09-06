@@ -5,7 +5,7 @@ import java.util.Optional;
 import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpDetails;
 
-public class PlainEntityPresenter implements HttpPresenter {
+public class PlainHttpPresenter implements HttpPresenter {
 
     @Override
     public String id() {
