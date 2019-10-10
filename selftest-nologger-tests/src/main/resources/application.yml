@@ -1,11 +1,22 @@
 server:
-  port: 8080
+  port: ${def.app.port}
 
 management:
-  server.port: 8081
+  server.port: ${def.management.port}
 
 selftest:
   logger: none
   override:
-    port: 8080
+    port: ${def.app.port}
     contextpath: /
+
+def:
+  app.port: 8080
+  management.port: 8081
+
+---
+spring.profiles: test
+
+def:
+  app.port: 7264  # not yet randomized
+  management.port: 0

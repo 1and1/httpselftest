@@ -8,6 +8,7 @@ import org.springframework.boot.actuate.autoconfigure.web.server.LocalManagement
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import net.oneandone.httpselftest.http.Headers;
@@ -18,6 +19,7 @@ import net.oneandone.httpselftest.http.TestRequest;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = Application.class, webEnvironment = WebEnvironment.DEFINED_PORT)
+@ActiveProfiles("test")
 public class ApplicationTest {
 
     @LocalServerPort
