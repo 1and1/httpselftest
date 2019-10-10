@@ -1,8 +1,12 @@
 package net.oneandone.httpselftest.http.presenter;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
 
+import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.Jsoner;
 
 import net.oneandone.httpselftest.http.Headers;
@@ -28,11 +32,26 @@ public class JsonEntityPresenter implements HttpPresenter {
         }
 
         try {
-            Jsoner.deserialize(body); // prettyPrint accepts everything
-            return Optional.of(details.headerBlock() + Jsoner.prettyPrint(body, 2));
+            Jsoner.deserialize(body); // prettyPrint accepts everything. deserialize to verify valid json.
+            return Optional.of(details.headerBlock() + prettyPrint(body));
         } catch (Exception e) {
             return Optional.empty();
         }
+    }
+
+    // based on Jsoner.prettyPrint(Reader, Writer, String, String) v3.1.0
+    private static String prettyPrint(String json) {
+        StringWriter writer = new StringWriter();
+        try {
+            Jsoner.prettyPrint(new StringReader(json), writer, "  ", "\n");
+        } catch (IOException ignored) {
+            // See java.io.StringReader.
+            // See java.io.StringWriter.
+        } catch (JsonException ignored) {
+            // Would have been caused by a an IO exception while lexing, but the StringReader does not throw them. See
+            // java.io.StringReader.
+        }
+        return writer.toString();
     }
 
 }
