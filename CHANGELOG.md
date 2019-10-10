@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
+- don't flush writers early to prevent potential conflicts with e.g. Content-MD5 filters
 - display presentation toggles only if there is more than one presentation
 
 ## [0.3.2] - 2019-09-05

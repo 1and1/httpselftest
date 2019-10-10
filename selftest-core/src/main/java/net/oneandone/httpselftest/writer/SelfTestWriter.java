@@ -18,8 +18,6 @@ public abstract class SelfTestWriter {
         this.writer = writer;
     }
 
-    public abstract void flush();
-
     public abstract void writePageEnd();
 
     public abstract void writePageStart(TestConfigs configs, Set<String> relevantConfigIds, TestConfigs.Values paramsToUse,

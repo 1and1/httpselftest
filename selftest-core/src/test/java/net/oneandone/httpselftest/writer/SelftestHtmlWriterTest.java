@@ -124,7 +124,6 @@ public class SelftestHtmlWriterTest {
             out.write(
                     "<script>document.querySelectorAll('input[type=submit]').forEach(submit => {submit.onclick = (any => {return false})})</script>");
             testOutput("All tests done. Buttons have been disabled.");
-            writer.flush();
         } finally {
             out.close();
         }

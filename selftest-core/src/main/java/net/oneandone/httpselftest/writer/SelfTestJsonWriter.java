@@ -28,10 +28,6 @@ public class SelfTestJsonWriter extends SelfTestWriter {
     }
 
     @Override
-    public void flush() {
-    }
-
-    @Override
     public void writePageStart(TestConfigs configs, Set<String> relevantConfigIds, TestConfigs.Values paramsToUse,
             String servletName, String testsBaseUrl, Instant lastTestRun, String callerIp, String lastTestrunIp) {
     }
@@ -52,7 +48,7 @@ public class SelfTestJsonWriter extends SelfTestWriter {
         JsonArray exceptions =
                 uncaughtExceptions.stream().map(Throwable::toString).collect(JsonArray::new, JsonArray::add, JsonArray::addAll);
 
-        writer.append(jsonResponseOf(success, failures, errors, exceptions)).flush();
+        writer.append(jsonResponseOf(success, failures, errors, exceptions));
     }
 
     @Override

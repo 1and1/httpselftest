@@ -95,11 +95,6 @@ public class SelftestHtmlWriter extends SelfTestWriter {
     }
 
     @Override
-    public void flush() {
-        writer.flush();
-    }
-
-    @Override
     public void writePageStart(TestConfigs configs, Set<String> relevantConfigIds, TestConfigs.Values paramsToUse,
             String servletName, String testsBaseUrl, Instant lastTestRun, String callerIp, String lastTestrunIp) {
         writeDirect("<!doctype html>");

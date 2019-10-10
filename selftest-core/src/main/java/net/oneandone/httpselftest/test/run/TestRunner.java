@@ -71,7 +71,6 @@ public class TestRunner {
         testdata.maxDuration = testCase.maxAcceptableDurationMillis();
 
         writer.writeTestOutcome(testdata, testdata.logs, ctx);
-        writer.flush();
     }
 
     static int clamped(int waitForLogs) {
