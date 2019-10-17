@@ -374,9 +374,9 @@ public class UrlConnectionHttpClientTest {
         assertThat(concatAvoidingDuplicateSlash("a/", "b")).isEqualTo("a/b");
         assertThat(concatAvoidingDuplicateSlash("a", "/b")).isEqualTo("a/b");
         assertThat(concatAvoidingDuplicateSlash("a/", "/b")).isEqualTo("a/b");
-        assertThat(concatAvoidingDuplicateSlash("a", "")).isEqualTo("a/");
+        assertThat(concatAvoidingDuplicateSlash("a", "")).isEqualTo("a");
         assertThat(concatAvoidingDuplicateSlash("", "b")).isEqualTo("/b");
-        assertThat(concatAvoidingDuplicateSlash("", "")).isEqualTo("/");
+        assertThat(concatAvoidingDuplicateSlash("", "")).isEqualTo("");
         assertThat(concatAvoidingDuplicateSlash("//", "//")).isEqualTo("///");
     }
 

@@ -47,6 +47,7 @@ git clone https://github.com/1and1/httpselftest.git
 cd httpselftest/selftest-springboot-example/
 mvn spring-boot:run
 # point your browser to the actuator endpoint: http://localhost:8081/actuator/selftest
+# OR to the application port http://localhost:8080/selftest
 ```
 
 ## Integration

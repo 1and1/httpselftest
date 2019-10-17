@@ -35,13 +35,21 @@ public class ApplicationTest {
 
     @Test
     public void executeTests() throws Exception {
+        assertPostWorks("http://localhost:" + mPort + "/actuator/selftest");
+    }
+
+    @Test
+    public void executeTests2() throws Exception {
+        assertPostWorks("http://localhost:" + sPort + "/selftest");
+    }
+
+    private void assertPostWorks(String endpoint) {
         Headers headers = new Headers();
         headers.add("Content-Type", "application/x-www-form-urlencoded");
         TestRequest request = new TestRequest("", "POST", headers, "execute=true&p-firstname=pish&p-lastname=posh");
 
         WrappedRequest wrapper = new WrappedRequest(request);
-        TestResponse response =
-                new SocketHttpClient().call("http://localhost:" + mPort + "/actuator/selftest", wrapper, 2000).response;
+        TestResponse response = new SocketHttpClient().call(endpoint, wrapper, 2000).response;
 
         assertThat(response.getStatus()).isEqualTo(200);
         assertThat(response.getBody()).contains("Done.", "␣").doesNotContain("EXCEPTION DURING EXECUTION");

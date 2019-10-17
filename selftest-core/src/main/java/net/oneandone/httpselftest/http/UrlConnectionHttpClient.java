@@ -148,7 +148,11 @@ public class UrlConnectionHttpClient implements HttpClient {
             path.deleteCharAt(0);
         }
 
-        return base.append('/').append(path).toString();
+        if (path.length() > 0) {
+            base.append('/').append(path);
+        }
+
+        return base.toString();
     }
 
 }

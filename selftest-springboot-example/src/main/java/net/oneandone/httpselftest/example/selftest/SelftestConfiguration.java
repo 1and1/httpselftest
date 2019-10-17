@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.endpoint.web.EndpointServlet;
 import org.springframework.boot.actuate.endpoint.web.annotation.ServletEndpoint;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -29,6 +30,14 @@ public class SelftestConfiguration {
         FilterRegistrationBean<SelftestMDCFilter> reg = new FilterRegistrationBean<>();
         reg.addUrlPatterns("/*");
         reg.setFilter(new SelftestMDCFilter());
+        return reg;
+    }
+
+    @Bean
+    public ServletRegistrationBean<ExampleSelftestServlet> onProductionPort() {
+        ExampleSelftestServlet servlet = new ExampleSelftestServlet();
+        ServletRegistrationBean<ExampleSelftestServlet> reg = new ServletRegistrationBean<>(servlet, "/selftest");
+        reg.addInitParameter(SelftestServlet.PROP_CONFIGGROUPS, env.getProperty(SelftestServlet.PROP_CONFIGGROUPS));
         return reg;
     }
 
