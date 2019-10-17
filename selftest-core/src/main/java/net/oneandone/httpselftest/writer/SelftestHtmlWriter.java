@@ -99,10 +99,10 @@ public class SelftestHtmlWriter extends SelfTestWriter {
             String servletName, String testsBaseUrl, Instant lastTestRun, String callerIp, String lastTestrunIp) {
         writeDirect("<!doctype html>");
         writeDirect("<head><meta charset='utf-8'/>");
-        writeCSS();
+        write(TagCreator.styleWithInlineFile("/httpselftest.css"));
         writeDirect("</head>");
         writeDirect("<body>");
-        writeTestcaseToggleScript();
+        write(TagCreator.scriptWithInlineFile("/httpselftest.js"));
         write(metainfoBlock(testsBaseUrl, lastTestRun, callerIp, lastTestrunIp));
         write(testParametersForm(configs, paramsToUse, servletName));
         providedConfigsForm(configs, relevantConfigIds, paramsToUse.activeConfigId()).ifPresent(this::write);
@@ -180,121 +180,6 @@ public class SelftestHtmlWriter extends SelfTestWriter {
     private void writeDirect(String s) {
         writer.write(s);
         writer.write("\n");
-    }
-
-    // FIXME extract to separate file using TagCreator#styleWithInlineFile.
-    private void writeCSS() {
-        writeDirect("<style>");
-        writeDirect("  :root { --darkred: #c00; --darkorange: #d70; }");
-        writeDirect("  body { margin: 10px; padding: 0; background-color: #444; color: #ccc; "
-                + " font-family: Verdana, Arial, sans-serif; font-size: 12px; }");
-        writeDirect("  h2 { margin: 5px; font-size: 19px; }");
-        writeDirect("  h3 { font-size: 15px; }");
-        writeDirect("  input { padding: 3px; margin: 1px 3px; border: 0; background-color: #202020; color: #bbb; "
-                + " border-radius: 3px; }");
-        writeDirect("  .fixed { color: #999; }");
-        writeDirect("  input[readonly] { color: #666; }");
-        writeDirect("  input[type=submit] { padding: 4px 7px; cursor: pointer; }");
-        writeDirect("  .block { margin-bottom: 10px; }");
-        writeDirect("  div.mono span { white-space: pre-wrap; word-break: break-all; }");
-        writeDirect("  span.warn { color: var(--darkred); }");
-        writeDirect("  span.url { text-decoration: underline; font-weight: bold; }");
-        writeDirect("  #metainfo td:first-child { padding-right: 10px; }");
-        writeDirect("  #params, #configs { float: left; }");
-        writeDirect("  #configs table { float: left; }");
-        writeDirect("  #configs table.otherMarkets input { color: #666; }");
-        writeDirect("  #configs .activeConfigId { box-shadow: 0 0 0 2px #3a3; }"); // green
-        writeDirect("  .clear { clear: both; }");
-        writeDirect("  .group { margin: 12px 0px; padding: 4px 6px; background-color: #222; color: #bbb; "
-                + " border-radius: 3px; }");
-        writeDirect("  div.mono.log > *:hover { background-image: linear-gradient(to right, #222, #0e4dab); }");
-        writeDirect("  .group > * { font-family: monospace; }");
-        writeDirect("  .group h2, .group h3 { font-family: Verdana, Arial, sans-serif; }");
-        writeDirect("  span.mono { font-family: monospace; }");
-
-        writeDirect("  .testcase { border-left-width: 14px; border-left-style: solid; }");
-        writeDirect("  .test-error { border-left-color: var(--darkred); }");
-        writeDirect("  .test-failure { border-left-color: var(--darkorange); }");
-        writeDirect("  .test-success { border-left-color: #3a3; }");
-        writeDirect("  .test-success.warn { border-left-color: #a9b630; }");
-        writeDirect("  .test-unrun   { border-left-color: #888; }");
-
-        writeDirect("  .indicator-inactive { display: none; }");
-        writeDirect("  .indicator { float: right; border-radius: 3px; margin: 0 2px; "
-                + "padding: 2px 8px; line-height: 16px; font-size: 16px; color: black; }");
-        writeDirect("  .indicator.foreignlogs { background-color: #034cde; }"); // blue
-        writeDirect("  .indicator.errorlogs { background-color: var(--darkred); }");
-        writeDirect("  .indicator.warnlogs { background-color: var(--darkorange); }");
-        writeDirect("  .indicator.slowresponse { background-color: grey; }");
-        writeDirect("  .indicator.logoverflow { background-color: #b610b6; }"); // purple
-
-        writeDirect("  div.mono > div > * { text-indent: -20px; display: inline-block; margin-left: 20px; }");
-
-        writeDirect("  .js .group div.contents { display: none; }");
-        writeDirect("  .js .group.open div.contents { display: block; }");
-        writeDirect("  .js .group.nonempty h2 { cursor: pointer; }");
-        writeDirect("  .js h2 .caret { display: inline-block; width: 0px; height: 0; margin: 0 4px; vertical-align: middle;");
-        writeDirect("   border-top: 6px solid; border-right: 6px solid transparent; border-left: 6px solid transparent; }");
-        writeDirect("  .js h2:hover .caret { margin-top: 3px; }");
-
-        writeDirect("  .level-trace { color: #777; }");
-        writeDirect("  .level-debug { color: #777; }");
-        writeDirect("  .level-info  { }"); // default color
-        writeDirect("  .level-warn  { color: var(--darkorange); }");
-        writeDirect("  .level-error { color: var(--darkred); }");
-        writeDirect("  .level-fatal { color: var(--darkred); }");
-
-        writeDirect("  body:not(.js) .presentationToggle { display: none; }");
-        writeDirect("  body:not(.js) .presenterContent ~ .presenterContent { display: none; }");
-        writeDirect("  .presentationToggle { padding: 2px 5px; margin-left: 5px; background-color: #fff2; border-radius: 3px; "
-                + "font-family: monospace; cursor: pointer; font-size: 12px; }");
-        writeDirect("  .presentationToggle.active { background-color: #fff4; }");
-        writeDirect("  .js .presenterContent:not(.active) { display: none; }");
-
-        writeDirect("  ");
-        writeDirect("</style>");
-    }
-
-    // FIXME extract to separate file using TagCreator#scriptWithInlineFile.
-    private void writeTestcaseToggleScript() {
-        writeDirect("<script>");
-        writeDirect("document.querySelector('body').classList.add('js')");
-        writeDirect("document.querySelector('body').onclick = function(evt) {");
-
-        // test case collapsing
-        writeDirect("   var closestH2 = evt.target;");
-        writeDirect("   while(closestH2 != null && closestH2.nodeName != 'H2' ) {");
-        writeDirect("     closestH2 = closestH2.parentNode");
-        writeDirect("   }");
-        writeDirect(
-                "   if (closestH2 != null && closestH2.nodeName==='H2' && closestH2.parentNode.classList.contains('group')) {");
-        writeDirect("      var group = closestH2.parentNode");
-        writeDirect("      if (group.classList.contains('open')) {");
-        writeDirect("         group.classList.remove('open')");
-        writeDirect("      } else {");
-        writeDirect("         group.classList.add('open')");
-        writeDirect("      }");
-        writeDirect("   }");
-
-        // http presentation switching
-        writeDirect("  if (evt.target.classList.contains('presentationToggle')) {");
-        writeDirect("    var toggleNode = evt.target;");
-        writeDirect("    var presenterId = toggleNode.textContent;");
-        writeDirect("    var headerNode = toggleNode.parentNode;"); // ^ h3
-        writeDirect("    var httpNode = headerNode.nextElementSibling;"); // ~ div
-        writeDirect("    ");
-        writeDirect("    headerNode.querySelectorAll('.active').forEach(function(child) {");
-        writeDirect("      child.classList.remove('active');");
-        writeDirect("    });");
-        writeDirect("    httpNode.querySelectorAll('.active').forEach(function(child) {");
-        writeDirect("      child.classList.remove('active');");
-        writeDirect("    });");
-        writeDirect("    toggleNode.classList.add('active');");
-        writeDirect("    httpNode.querySelector('.presenterContent.' + presenterId).classList.add('active');");
-        writeDirect("  }");
-
-        writeDirect("}");
-        writeDirect("</script>");
     }
 
     DomContent metainfoBlock(String testsBaseUrl, Instant lastTestRun, String callerIp, String lastTestrunIp) {
