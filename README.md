@@ -67,10 +67,10 @@ mvn spring-boot:run
 - In case [Logback](https://logback.qos.ch/) logging support is used, logback dependencies need to be on the classpath (`logback-classic` and `logback-core`).
 
 ### Security
-The servlet is not supposed to be exposed to the internet. This is an internal developer tool.
+The servlet is not supposed to be exposed to the internet. This is an internal developer tool. Additionally, you may want to set `selftest.credentials`.
 
-### Spring Boot 2
-If your application is a Spring Boot 2 app, the servlet can be registered as a `@ServletEndpoint`. In this case the application port and base path may need to be provided manually. The endpoint MUST be exposed as a `@Bean`. The servlet will be running on the management port.
+### Usage as Spring Boot 2 Actuator
+If your application is a Spring Boot 2 app, the servlet can be registered as a `@ServletEndpoint`. In this case the application port and base path may need to be provided manually. The servlet will be running on the management port.
 
 ```java
 @ServletEndpoint(id = "selftest")
@@ -78,28 +78,24 @@ public class SelftestEndpoint implements Supplier<EndpointServlet> {
 
     @Override
     public EndpointServlet get() {
-        return new EndpointServlet(LoginAttemptsSelftestServlet.class)
+        return new EndpointServlet(YourSelftestServlet.class)
             .withInitParameter(SelftestServlet.PROP_OVERRIDE_PORT, "8080")
             .withInitParameter(SelftestServlet.PROP_OVERRIDE_PATH, "/rest");
     }
 
 }
 ```
-### Spring Boot 1
-If your application is a Spring Boot 1 app, the servlet can be registered by the way of `ServletRegistrationBean`. This way it will be running on the application port.
+### Usage as Spring Boot raw servlet
+If your application is a Spring Boot app, the servlet can be registered by the way of `ServletRegistrationBean`. This way it will be running on the application port.
 
 ```java
 @Bean
-public ServletRegistrationBean selftestServlet() {
-    ServletRegistrationBean servlet = new ServletRegistrationBean();
-    servlet.setServlet(new PMDSelftestServlet());
-    servlet.setName("selftestServlet");
-    servlet.addUrlMappings("/-system/selftest");
-    return servlet;
+public ServletRegistrationBean<YourSelftestServlet> onProductionPort() {
+    return new ServletRegistrationBean<>(new YourSelftestServlet(), "/selftest");
 }
 ```
 
-### Otherwise
+### Usage otherwise
 If your application has a `web.xml`, the servlet containing your test cases can be registered there.
 ```xml
 <servlet>
@@ -108,7 +104,7 @@ If your application has a `web.xml`, the servlet containing your test cases can 
 </servlet>
 <servlet-mapping>
    <servlet-name>SelfTestServlet</servlet-name>
-   <url-pattern>/-system/selftest</url-pattern>
+   <url-pattern>/selftest</url-pattern>
 </servlet-mapping>
 ```
 

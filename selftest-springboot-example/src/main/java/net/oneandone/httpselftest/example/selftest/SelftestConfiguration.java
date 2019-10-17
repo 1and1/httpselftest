@@ -35,8 +35,8 @@ public class SelftestConfiguration {
 
     @Bean
     public ServletRegistrationBean<ExampleSelftestServlet> onProductionPort() {
-        ExampleSelftestServlet servlet = new ExampleSelftestServlet();
-        ServletRegistrationBean<ExampleSelftestServlet> reg = new ServletRegistrationBean<>(servlet, "/selftest");
+        ServletRegistrationBean<ExampleSelftestServlet> reg =
+                new ServletRegistrationBean<>(new ExampleSelftestServlet(), "/selftest");
         reg.addInitParameter(SelftestServlet.PROP_CONFIGGROUPS, env.getProperty(SelftestServlet.PROP_CONFIGGROUPS));
         return reg;
     }
