@@ -302,13 +302,13 @@ public class SelftestHtmlWriterTest {
     @Test
     public void writeTestOutcome_jsonPresentation() throws Exception {
         TestRunData testRun = testRun("test1", "mn1", 234, TestRunResult.success());
-        String json = "{\"a\":[1,2,3,],\"b\": {\"c\":1}}";
+        String json = "{\"a\":[1,2,3,],\"b\": {\"c\":1}, \"slash/key\" : \"slash/value\"}";
         TestRunDataHelper.setRequest(testRun, requestWithBody(json, "Content-Type: application/json"));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
         String html = out.written();
-        assertThat(html).contains("<span>    1,</span><br><span>    2,</span><br>");
+        assertThat(html).contains("<span>    1,</span><br><span>    2,</span><br>", "slash/key&quot;:&quot;slash/value");
     }
 
     @Test

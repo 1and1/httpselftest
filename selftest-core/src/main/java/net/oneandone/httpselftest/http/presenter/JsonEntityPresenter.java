@@ -1,12 +1,10 @@
 package net.oneandone.httpselftest.http.presenter;
 
-import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
 
-import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.Jsoner;
 
 import net.oneandone.httpselftest.http.Headers;
@@ -44,14 +42,11 @@ public class JsonEntityPresenter implements HttpPresenter {
         StringWriter writer = new StringWriter();
         try {
             Jsoner.prettyPrint(new StringReader(json), writer, "  ", "\n");
-        } catch (IOException ignored) {
-            // See java.io.StringReader.
-            // See java.io.StringWriter.
-        } catch (JsonException ignored) {
-            // Would have been caused by a an IO exception while lexing, but the StringReader does not throw them. See
-            // java.io.StringReader.
+            String pretty = writer.toString();
+            return pretty.replace("\\/", "/"); // json-simple unnecessarily escapes slashes
+        } catch (Exception e) {
+            throw new RuntimeException("failed to pretty print. should never happen.");
         }
-        return writer.toString();
     }
 
 }
