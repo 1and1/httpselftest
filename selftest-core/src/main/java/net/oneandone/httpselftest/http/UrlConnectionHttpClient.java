@@ -139,6 +139,10 @@ public class UrlConnectionHttpClient implements HttpClient {
     }
 
     public static String concatAvoidingDuplicateSlash(String baseUrl, String requestPath) {
+        if (requestPath.isEmpty()) {
+            return baseUrl;
+        }
+
         StringBuilder base = new StringBuilder(baseUrl);
         if (base.length() > 0 && base.charAt(base.length() - 1) == '/') {
             base.deleteCharAt(base.length() - 1);
@@ -148,11 +152,7 @@ public class UrlConnectionHttpClient implements HttpClient {
             path.deleteCharAt(0);
         }
 
-        if (path.length() > 0) {
-            base.append('/').append(path);
-        }
-
-        return base.toString();
+        return base.append('/').append(path).toString();
     }
 
 }
