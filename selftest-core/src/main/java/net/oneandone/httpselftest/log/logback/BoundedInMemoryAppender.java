@@ -45,7 +45,11 @@ public class BoundedInMemoryAppender<E> extends ContextAwareBase implements Appe
     }
 
     public SynchronousLogBuffer getBuffer(String runId) {
-        return buffers.get(runId);
+        SynchronousLogBuffer bufferForId = buffers.get(runId);
+        if (bufferForId == null) {
+            throw new IllegalArgumentException("Unknown run id: " + runId);
+        }
+        return bufferForId;
     }
 
     @Override

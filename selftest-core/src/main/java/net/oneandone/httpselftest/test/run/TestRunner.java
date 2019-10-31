@@ -26,6 +26,8 @@ import net.oneandone.httpselftest.writer.SelfTestWriter;
 
 public class TestRunner {
 
+    // TODO add some tests
+
     public static final String X_REQUEST_ID = "X-REQUEST-ID";
 
     private static final AtomicInteger EXECUTION_COUNTER = new AtomicInteger(0);

@@ -61,11 +61,6 @@ public abstract class SelftestServlet extends HttpServlet {
     private Optional<String> configuredContextPath;
     private Optional<List<String>> configuredConfigGroups;
 
-    // TODO (project)
-    // - extract http clients. pull selftest specific logic out. maybe send Accept-Encoding
-    // - write tests for test runner
-    // - provide logs to verification?
-
     /**
      * @return all predefined test properties
      */

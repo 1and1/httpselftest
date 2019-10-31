@@ -22,13 +22,13 @@ public class LogAccess {
 
         Map<SynchronousLogBuffer, LogSnapshot> snapshots = new IdentityHashMap<>();
 
-        loggers.forEach(info -> {
-            if (!snapshots.containsKey(info.buffer)) {
-                snapshots.put(info.buffer, info.buffer.snapshot());
+        loggers.forEach(access -> {
+            if (!snapshots.containsKey(access.buffer)) {
+                snapshots.put(access.buffer, access.buffer.snapshot());
             }
         });
 
-        return loggers.stream().map(info -> new LogDetails(info.logNames, snapshots.get(info.buffer), info.renderer))
+        return loggers.stream().map(access -> new LogDetails(access.logNames, snapshots.get(access.buffer), access.renderer))
                 .collect(toList());
     }
 
