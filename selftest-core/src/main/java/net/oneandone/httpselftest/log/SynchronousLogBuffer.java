@@ -6,7 +6,7 @@ import java.util.Deque;
 
 public class SynchronousLogBuffer {
 
-    private static final int MAX_SIZE = 200;
+    private static final int MAX_SIZE = 300;
 
     private Deque<SelftestEvent> deque;
 
