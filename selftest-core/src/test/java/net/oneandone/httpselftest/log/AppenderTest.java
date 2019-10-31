@@ -54,7 +54,6 @@ public class AppenderTest {
         assertThat(snapshot.hasOverflown).as("overflown").isFalse();
 
         List<SelftestEvent> events = snapshot.events;
-        assertThat(events.get(0).runId).isEqualTo("toastarena");
         assertThat(events.get(0).event).isEqualTo("selftestEvent");
     }
 

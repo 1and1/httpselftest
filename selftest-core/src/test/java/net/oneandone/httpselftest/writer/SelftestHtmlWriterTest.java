@@ -342,9 +342,9 @@ public class SelftestHtmlWriterTest {
         TestRunDataHelper.setResponse(testRun, wireBasedResponseWithBody("response body"));
 
         List<LogAccess> logs = logInfos("LOG1", "LOG2", "ROOT");
-        logs.get(0).buffer.add(SelftestEvent.of("runId1", "simple line logger 1"));
-        logs.get(1).buffer.add(SelftestEvent.of("runId1", "simple line logger 2"));
-        logs.get(2).buffer.add(SelftestEvent.of("runId1", "simple line root logger"));
+        logs.get(0).buffer.add(SelftestEvent.of("simple line logger 1"));
+        logs.get(1).buffer.add(SelftestEvent.of("simple line logger 2"));
+        logs.get(2).buffer.add(SelftestEvent.of("simple line root logger"));
 
         writer.writeTestOutcome(testRun, snapshot(logs), context("hallo", "bernd"));
 
@@ -373,31 +373,31 @@ public class SelftestHtmlWriterTest {
         logs.add(new LogAccess(names("LOGBACK", "NOLAYOUT"), singleBuffer, new LogbackEventRenderer(Optional.empty())));
         logs.add(new LogAccess(names("LOGBACK", "WITHLAYOUT"), singleBuffer, new LogbackEventRenderer(Optional.of(layout))));
 
-        singleBuffer.add(of("mn2", event("th1", Level.TRACE, "long message long message long message long message "
+        singleBuffer.add(of(event("th1", Level.TRACE, "long message long message long message long message "
                 + "long message long message long message long message long message long message long message long message ")));
-        singleBuffer.add(of("mn2", event("th1", Level.TRACE, "trace evt http://www.insecure.de suffix")));
-        singleBuffer.add(of("mn2", event("th1", Level.DEBUG, "debug evt http://www.insecure.de suffix")));
-        singleBuffer.add(of("mn2", event("th1", Level.INFO, "info evt http://www.insecure.de suffix")));
-        singleBuffer.add(of("mn2", event("th1", Level.INFO, "two lines\n2nd line http://toast.de:123/")));
-        singleBuffer.add(of("otherRunId1", event("th1", Level.WARN, "warn evt https://www.secure.de suffix")));
-        singleBuffer.add(of("otherRunId2", event("th1", Level.ERROR, "error evt two lines http://toast.de:123/\n2nd line")));
+        singleBuffer.add(of(event("th1", Level.TRACE, "trace evt http://www.insecure.de suffix")));
+        singleBuffer.add(of(event("th1", Level.DEBUG, "debug evt http://www.insecure.de suffix")));
+        singleBuffer.add(of(event("th1", Level.INFO, "info evt http://www.insecure.de suffix")));
+        singleBuffer.add(of(event("th1", Level.INFO, "two lines\n2nd line http://toast.de:123/")));
+        singleBuffer.add(of(event("th1", Level.WARN, "warn evt https://www.secure.de suffix")));
+        singleBuffer.add(of(event("th1", Level.ERROR, "error evt two lines http://toast.de:123/\n2nd line")));
 
         writer.writeTestOutcome(testRun, snapshot(logs), emptyContext());
 
         String html = out.written();
-        assertThat(html).contains("[otherRunId1]", "[th1]", "[INFO]", "info evt", "201", "LOGBACK</span> &rarr;",
+        assertThat(html).contains("[th1]", "[INFO]", "info evt", "201", "LOGBACK</span> &rarr;",
                 "<span class=\"mono\">WITHLAYOUT", "NOLAYOUT");
         assertThat(html).contains("<span class=\"url\">http://www.insecure.de</span>");
         assertThat(html).contains("<span class=\"url\">https://www.secure.de</span>");
         assertThat(html).contains("level-warn", "level-unknown");
-        assertThat(html).contains("indicator foreignlogs", "indicator errorlogs", "indicator warnlogs", "indicator slowresponse");
+        assertThat(html).contains("indicator errorlogs", "indicator warnlogs", "indicator slowresponse");
     }
 
     @Test
     public void writeTestOutcome_overflow() {
         TestRunData testRun = testRun("nameIrrelevant", "mn3", 50, TestRunResult.success());
         List<LogAccess> logInfos = logInfos("ROOT");
-        IntStream.range(0, 250).forEach(i -> logInfos.get(0).buffer.add(of("mn3", "msg")));
+        IntStream.range(0, 250).forEach(i -> logInfos.get(0).buffer.add(of("msg")));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos), emptyContext());
 
@@ -413,8 +413,7 @@ public class SelftestHtmlWriterTest {
 
         String html = out.written();
         assertThat(html).contains("test-success", "SUCCESS");
-        assertThat(html).doesNotContain("indicator foreignlogs", "indicator errorlogs", "indicator warnlogs",
-                "indicator slowresponse");
+        assertThat(html).doesNotContain("indicator errorlogs", "indicator warnlogs", "indicator slowresponse");
     }
 
     @Test

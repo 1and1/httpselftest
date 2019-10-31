@@ -39,7 +39,7 @@ public class BoundedInMemoryAppender<E> extends ContextAwareBase implements Appe
         if (requestId != null) {
             SynchronousLogBuffer buffer = buffers.get(requestId);
             if (buffer != null) {
-                buffer.add(SelftestEvent.of(requestId, event));
+                buffer.add(SelftestEvent.of(event));
             }
         }
     }

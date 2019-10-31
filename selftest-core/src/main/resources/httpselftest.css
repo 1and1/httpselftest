@@ -32,7 +32,6 @@ span.mono { font-family: monospace; }
 
 .indicator-inactive { display: none; }
 .indicator { float: right; border-radius: 3px; margin: 0 2px; padding: 2px 8px; line-height: 16px; font-size: 16px; color: black; }
-.indicator.foreignlogs { background-color: #034cde; } /* blue */
 .indicator.errorlogs { background-color: var(--darkred); }
 .indicator.warnlogs { background-color: var(--darkorange); }
 .indicator.slowresponse { background-color: grey; }
