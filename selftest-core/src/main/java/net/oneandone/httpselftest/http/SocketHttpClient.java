@@ -241,21 +241,11 @@ public class SocketHttpClient implements HttpClient {
         return numBytes >= 2 && bytes.get(numBytes - 2) == '\r' && bytes.get(numBytes - 1) == '\n';
     }
 
-    public static byte[] concat(byte[] left, byte[] right) {
-        byte[] newBuffer = new byte[left.length + right.length];
-
-        for (int i = 0; i < left.length; i++) {
-            newBuffer[i] = left[i];
-        }
-
-        int offset = left.length;
-        for (int i = 0; i < right.length; i++) {
-            newBuffer[i + offset] = right[i];
-        }
-
-        // TODO use System.arraycopy instead?
-
-        return newBuffer;
+    public static byte[] concat(byte[] first, byte[] second) {
+        byte[] combined = new byte[first.length + second.length];
+        System.arraycopy(first, 0, combined, 0, first.length);
+        System.arraycopy(second, 0, combined, first.length, second.length);
+        return combined;
     }
 
     private static void checkMethodCharset(String method) {
