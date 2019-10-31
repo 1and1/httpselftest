@@ -60,11 +60,11 @@ public class AppenderTest {
     @Test
     public void isBounded() throws Exception {
         markThreadWithSelftestRunId("runId");
-        IntStream.range(0, 250).forEach(i -> appender.doAppend("event(" + i + ")"));
+        IntStream.range(0, 350).forEach(i -> appender.doAppend("event(" + i + ")"));
         LogSnapshot snapshot = appender.getBuffer("runId").snapshot();
 
         assertThat(snapshot.hasOverflown).as("overflown").isTrue();
-        assertThat(snapshot.events.size()).isEqualTo(200);
+        assertThat(snapshot.events.size()).isEqualTo(300);
 
         List<Object> messages = snapshot.events.stream().map(event -> event.event).collect(toList());
         assertThat(messages).contains("event(50)", "event(249)").doesNotContain("event(0)", "event(49)");

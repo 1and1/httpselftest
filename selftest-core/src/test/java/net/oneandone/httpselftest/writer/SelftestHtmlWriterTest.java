@@ -397,7 +397,7 @@ public class SelftestHtmlWriterTest {
     public void writeTestOutcome_overflow() {
         TestRunData testRun = testRun("nameIrrelevant", "mn3", 50, TestRunResult.success());
         List<LogAccess> logInfos = logInfos("ROOT");
-        IntStream.range(0, 250).forEach(i -> logInfos.get(0).buffer.add(of("msg")));
+        IntStream.range(0, 350).forEach(i -> logInfos.get(0).buffer.add(of("msg")));
 
         writer.writeTestOutcome(testRun, snapshot(logInfos), emptyContext());
 
