@@ -25,9 +25,9 @@ public class ExampleSelftestServlet extends SelftestServlet {
     private static final String P_FIXED = "fixed";
 
     @Override
-    protected TestConfigs getConfigs() {
+    protected TestConfigs.Builder getConfigs() {
 
-        TestConfigs configs = new TestConfigs(FIRSTNAME, LASTNAME, P_FIXED);
+        TestConfigs.Builder configs = new TestConfigs.Builder(FIRSTNAME, LASTNAME, P_FIXED);
         configs.fixed(P_FIXED);
         configs.put("someconfig local", "stephen", "colbert", "");
         configs.put("otherconfig local", "stephen", "hillenburg", "");

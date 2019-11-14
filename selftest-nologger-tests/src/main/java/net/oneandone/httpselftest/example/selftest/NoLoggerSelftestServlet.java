@@ -15,8 +15,8 @@ import net.oneandone.httpselftest.test.api.TestValues;
 public class NoLoggerSelftestServlet extends SelftestServlet {
 
     @Override
-    protected TestConfigs getConfigs() {
-        return new TestConfigs(FIRSTNAME, LASTNAME);
+    protected TestConfigs.Builder getConfigs() {
+        return new TestConfigs.Builder(FIRSTNAME, LASTNAME);
     }
 
     public static class LogTest implements TestCase {

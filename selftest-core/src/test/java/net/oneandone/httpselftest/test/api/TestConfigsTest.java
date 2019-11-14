@@ -15,101 +15,98 @@ import org.junit.Before;
 import org.junit.Test;
 
 import net.oneandone.httpselftest.test.api.TestConfigs;
+import net.oneandone.httpselftest.test.api.TestConfigs.Builder;
 import net.oneandone.httpselftest.test.api.TestConfigs.Values;
 
 @SuppressWarnings("unused")
 public class TestConfigsTest {
 
     private static final String NOT_NULL = "must not be null";
+    private static final String NO_NULL_ELEMENTS = "not contain null elements";
+    private static final String NO_DUPLICATES = "not contain duplicates";
+
+    private TestConfigs.Builder p1Builder;
 
     private TestConfigs p1Config;
 
     @Before
     public void before() {
-        p1Config = new TestConfigs("p1");
+        p1Builder = new TestConfigs.Builder("p1");
+        p1Config = new TestConfigs(p1Builder);
     }
 
     @Test
     public void new_testconfigs() {
-        new TestConfigs();
-        new TestConfigs("a");
-        new TestConfigs("a", "b");
+        new TestConfigs(new TestConfigs.Builder());
+        new TestConfigs(new TestConfigs.Builder("a"));
+        new TestConfigs(new TestConfigs.Builder("a", "b"));
     }
 
     @Test
     public void new_testconfigs_nullArray() {
-        assertThatThrownBy(() -> new TestConfigs((String[]) null)).hasMessageContaining(NOT_NULL);
+        assertThatThrownBy(() -> new TestConfigs.Builder((String[]) null)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
     public void new_testconfigs_nullParameter() {
-        assertThatThrownBy(() -> new TestConfigs(null, null)).hasMessageContaining(NOT_NULL);
+        assertThatThrownBy(() -> new TestConfigs(new TestConfigs.Builder(null, null))).hasMessageContaining(NO_NULL_ELEMENTS);
     }
 
     @Test
     public void new_testconfigs_duplicate() {
-        assertThatThrownBy(() -> new TestConfigs("a", "a")).hasMessageContaining("must be unique");
+        assertThatThrownBy(() -> new TestConfigs(new TestConfigs.Builder("a", "a"))).hasMessageContaining(NO_DUPLICATES);
     }
 
     @Test
     public void new_testconfigs_emptyString() {
-        assertThatThrownBy(() -> new TestConfigs("")).hasMessageContaining("must not be empty");
+        Builder cb = new TestConfigs.Builder("");
+        assertThatThrownBy(() -> new TestConfigs(cb)).hasMessageContaining("not contain empty strings");
     }
 
     @Test
     public void fixed_nullArray() throws Exception {
-        assertThatThrownBy(() -> p1Config.fixed((String[]) null)).hasMessageContaining(NOT_NULL);
+        assertThatThrownBy(() -> p1Builder.fixed((String[]) null)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
-    public void fixed_nullParameter() throws Exception {
-        assertThatThrownBy(() -> p1Config.fixed(null, null)).hasMessageContaining(NOT_NULL);
-    }
-
-    @Test
-    public void fixed_empty() throws Exception {
-        assertThatThrownBy(() -> p1Config.fixed()).hasMessageContaining("must not be empty");
-    }
-
-    @Test
-    public void fixed_emptyString() throws Exception {
-        assertThatThrownBy(() -> p1Config.fixed("")).hasMessageContaining("must not be empty");
+    public void fixed_empty_works() throws Exception {
+        p1Builder.fixed();
+        new TestConfigs(p1Builder);
     }
 
     @Test
     public void fixed_duplicate() throws Exception {
-        assertThatThrownBy(() -> p1Config.fixed("p1", "p1")).hasMessageContaining("must be unique");
+        p1Builder.fixed("p1", "p1");
+        assertThatThrownBy(() -> new TestConfigs(p1Builder)).hasMessageContaining(NO_DUPLICATES);
+    }
+
+    @Test
+    public void fixed_emptyString() throws Exception {
+        p1Builder.fixed("");
+        assertThatThrownBy(() -> new TestConfigs(p1Builder)).hasMessageContaining("subset");
+    }
+
+    @Test
+    public void fixed_nullParameter() throws Exception {
+        p1Builder.fixed("p1", null);
+        assertThatThrownBy(() -> new TestConfigs(p1Builder)).hasMessageContaining("subset");
     }
 
     @Test
     public void fixed_unknownParameter() throws Exception {
-        assertThatThrownBy(() -> p1Config.fixed("p2")).hasMessageContaining("parameter unknown");
+        p1Builder.fixed("p2");
+        assertThatThrownBy(() -> new TestConfigs(p1Builder)).hasMessageContaining("subset");
     }
 
     @Test
     public void hasFixedParams() throws Exception {
-        assertThat(p1Config.hasFixedParams()).as("before fixed()").isFalse();
-
-        p1Config.fixed("p1");
-        assertThat(p1Config.hasFixedParams()).as("after fixed").isTrue();
-    }
-
-    @Test
-    public void fixed_twice() throws Exception {
-        p1Config.fixed("p1");
-        assertThatThrownBy(() -> p1Config.fixed("p1")).hasMessageContaining("already set");
-    }
-
-    @Test
-    public void fixed_afterPut() throws Exception {
-        p1Config.put("c1", "v1");
-        assertThatThrownBy(() -> p1Config.fixed("p1")).hasMessageContaining("before adding values");
+        p1Builder.fixed("p1");
+        assertThat(new TestConfigs(p1Builder).hasFixedParams()).isTrue();
     }
 
     @Test
     public void isFixed_unfixed() throws Exception {
-        TestConfigs c = new TestConfigs("p1");
-        Values v = c.createEmpty();
+        Values v = p1Config.createEmpty();
 
         assertThatThrownBy(() -> v.isFixed(null));
         assertThatThrownBy(() -> v.isFixed("p2"));
@@ -118,96 +115,104 @@ public class TestConfigsTest {
 
     @Test
     public void isFixed_fixed() throws Exception {
-        TestConfigs c = new TestConfigs("p1");
-        c.fixed("p1");
+        p1Builder.fixed("p1");
+        TestConfigs c = new TestConfigs(p1Builder);
         Values vfixed = c.createEmpty();
         assertThat(vfixed.isFixed("p1")).isTrue();
     }
 
     @Test
     public void put_nullId() {
-        assertThatThrownBy(() -> p1Config.put(null, "v1")).hasMessageContaining(NOT_NULL);
+        assertThatThrownBy(() -> p1Builder.put(null, "v1")).hasMessageContaining(NOT_NULL);
     }
 
     @Test
     public void put_nullArray() {
-        assertThatThrownBy(() -> p1Config.put("c1", (String[]) null)).hasMessageContaining(NOT_NULL);
+        assertThatThrownBy(() -> p1Builder.put("c1", (String[]) null)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
     public void put_nullValue() {
-        TestConfigs c = new TestConfigs("p1", "p2");
-        assertThatThrownBy(() -> c.put("c1", "v1", null)).hasMessageContaining(NOT_NULL).hasMessageContaining("'p2'");
+        TestConfigs.Builder cb = new TestConfigs.Builder("p1", "p2");
+        cb.put("c1", "v1", null);
+        assertThatThrownBy(() -> new TestConfigs(cb)).hasMessageContaining(NO_NULL_ELEMENTS);
     }
 
     @Test
     public void put_duplicateId() {
-        p1Config.put("p1", "v1");
-        assertThatThrownBy(() -> p1Config.put("p1", "v1")).hasMessageContaining("already exists");
+        p1Builder.put("p1", "v1");
+        assertThatThrownBy(() -> p1Builder.put("p1", "v1")).hasMessageContaining("already exists");
     }
 
     @Test
     public void put_notEnoughValues() {
-        TestConfigs c = new TestConfigs("p1", "p2");
-        assertThatThrownBy(() -> c.put("c1", "v1")).hasMessageContaining("number of parameter values");
+        Builder cb = new TestConfigs.Builder("p1", "p2");
+        cb.put("c1", "v1");
+        assertThatThrownBy(() -> new TestConfigs(cb)).hasMessageContaining("number of parameter values");
     }
 
     @Test
     public void put_tooManyValues() {
-        TestConfigs c = new TestConfigs("p1", "p2");
-        assertThatThrownBy(() -> c.put("c1", "v1", "v2", "v3")).hasMessageContaining("number of parameter values");
+        Builder cb = new TestConfigs.Builder("p1", "p2");
+        cb.put("c1", "v1", "v2", "v3");
+        assertThatThrownBy(() -> new TestConfigs(cb)).hasMessageContaining("number of parameter values");
     }
 
     @Test
     public void isEmpty() {
-        assertThat(p1Config.isEmpty()).as("should be empty").isTrue();
-        p1Config.put("p1", "v1");
-        assertThat(p1Config.isEmpty()).as("should not be empty").isFalse();
+        assertThat(new TestConfigs(p1Builder).isEmpty()).as("should be empty").isTrue();
+        p1Builder.put("p1", "v1");
+        assertThat(new TestConfigs(p1Builder).isEmpty()).as("should not be empty").isFalse();
     }
 
     @Test
     public void getValues_null() {
-        assertThatThrownBy(() -> p1Config.getValues(null)).hasMessageContaining(NOT_NULL);
+        String nullConfigId = null;
+        assertThatThrownBy(() -> p1Config.create(nullConfigId)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
     public void getValues_exists() {
-        p1Config.put("c1", "v1");
-        p1Config.getValues("c1");
+        p1Builder.put("c1", "v1");
+        new TestConfigs(p1Builder).create("c1");
     }
 
     @Test
     public void getValues_notExists() {
-        p1Config.put("c1", "v1");
-        assertThatThrownBy(() -> p1Config.getValues("c2")).hasMessageContaining("not found");
+        p1Builder.put("c1", "v1");
+        TestConfigs c = new TestConfigs(p1Builder);
+        assertThatThrownBy(() -> c.create("c2")).hasMessageContaining("Unknown config id");
     }
 
     @Test
     public void getIds() {
-        p1Config.put("c1", "v1");
-        p1Config.put("c2", "v2");
-        p1Config.put("c3", "v3");
-        assertThat(p1Config.getIds()).isEqualTo((new HashSet<String>(asList("c1", "c2", "c3"))));
+        p1Builder.put("c1", "v1");
+        p1Builder.put("c2", "v2");
+        p1Builder.put("c3", "v3");
+        TestConfigs c = new TestConfigs(p1Builder);
+        assertThat(c.getIds()).isEqualTo((new HashSet<String>(asList("c1", "c2", "c3"))));
     }
 
     @Test
     public void activeConfigId() throws Exception {
-        p1Config.put("c1", "v1");
-        p1Config.put("c2", "v2");
-        assertThat(p1Config.getValues("c1").activeConfigId()).containsSame("c1");
-        assertThat(p1Config.getValues("c2").activeConfigId()).containsSame("c2");
+        p1Builder.put("c1", "v1");
+        p1Builder.put("c2", "v2");
+        TestConfigs c = new TestConfigs(p1Builder);
+        assertThat(c.create("c1").activeConfigId()).containsSame("c1");
+        assertThat(c.create("c2").activeConfigId()).containsSame("c2");
     }
 
     @Test
     public void create_nullMap() throws Exception {
-        assertThatThrownBy(() -> p1Config.create(null)).hasMessageContaining(NOT_NULL);
+        Map<String, String> nullUserValues = null;
+        assertThatThrownBy(() -> p1Config.create(nullUserValues)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
     public void create_null_value() {
         Map<String, String> params = new HashMap<>();
         params.put("p1", null);
-        assertThatThrownBy(() -> p1Config.create(params)).hasMessageContaining(NOT_NULL).hasMessageContaining("'p1'");
+        assertThatThrownBy(() -> p1Config.create(params)).hasMessageContaining(NO_NULL_ELEMENTS);
     }
 
     @Test
@@ -219,7 +224,7 @@ public class TestConfigsTest {
 
     @Test
     public void create_missingParameter_usesDefaultValue() {
-        TestConfigs c = new TestConfigs("p1", "p2");
+        TestConfigs c = new TestConfigs(new TestConfigs.Builder("p1", "p2"));
         Map<String, String> params = new HashMap<>();
         params.put("p2", "v2");
         assertThat(c.create(params).get("p1")).isEqualTo("");
@@ -227,10 +232,11 @@ public class TestConfigsTest {
 
     @Test
     public void create_fixed() throws Exception {
-        String FIXED = "f2";
-        TestConfigs c = new TestConfigs("p1", FIXED);
-        c.fixed(FIXED);
-        c.put("c1", "v1", "fixed_value");
+        String FIXED = "p2";
+        Builder cb = new TestConfigs.Builder("p1", FIXED);
+        cb.fixed(FIXED);
+        cb.put("c1", "v1", "fixed_value");
+        TestConfigs c = new TestConfigs(cb);
 
         HashMap<String, String> params = new HashMap<>();
         params.put("p1", "v1");
@@ -248,7 +254,7 @@ public class TestConfigsTest {
 
     @Test
     public void create_ok() {
-        TestConfigs c = new TestConfigs("p1", "p2");
+        TestConfigs c = new TestConfigs(new TestConfigs.Builder("p1", "p2"));
         Map<String, String> params = new HashMap<>();
         params.put("p1", "v1");
         params.put("p2", "v2");
@@ -262,20 +268,20 @@ public class TestConfigsTest {
 
     @Test
     public void createWithId_nullParams() {
-        p1Config.put("c1", "v1");
-        assertThatThrownBy(() -> p1Config.create("c1", null)).hasMessageContaining(NOT_NULL);
+        p1Builder.put("c1", "v1");
+        assertThatThrownBy(() -> new TestConfigs(p1Builder).create("c1", null)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
     public void createWithId_unknownId() throws Exception {
-        p1Config.put("c1", "v1");
-        assertThatThrownBy(() -> p1Config.create("c2", emptyMap())).hasMessageContaining("Unknown config id");
+        p1Builder.put("c1", "v1");
+        assertThatThrownBy(() -> new TestConfigs(p1Builder).create("c2", emptyMap())).hasMessageContaining("Unknown config id");
     }
 
     @Test
     public void createWithId_ok() throws Exception {
-        p1Config.put("c1", "v1");
-        p1Config.create("c1", emptyMap());
+        p1Builder.put("c1", "v1");
+        new TestConfigs(p1Builder).create("c1", emptyMap());
     }
 
     @Test
@@ -286,35 +292,37 @@ public class TestConfigsTest {
 
     @Test
     public void getParameterNames() {
-        TestConfigs c = new TestConfigs("p1", "p2");
+        TestConfigs c = new TestConfigs(new TestConfigs.Builder("p1", "p2"));
         assertThat(c.getParameterNames()).isEqualTo(asList("p1", "p2"));
     }
 
     @Test
     public void values_get_ok() {
-        TestConfigs c = new TestConfigs("p1", "p2");
-        c.put("c1", "v1", "v2");
-        c.put("c2", "v3", "v4");
-        Values values = c.getValues("c1");
+        Builder cb = new TestConfigs.Builder("p1", "p2");
+        cb.put("c1", "v1", "v2");
+        cb.put("c2", "v3", "v4");
+        TestConfigs c = new TestConfigs(cb);
+        Values values = c.create("c1");
 
-        assertThat(c.getValues("c1").get("p1")).isEqualTo("v1");
-        assertThat(c.getValues("c1").get("p2")).isEqualTo("v2");
-        assertThat(c.getValues("c2").get("p1")).isEqualTo("v3");
-        assertThat(c.getValues("c2").get("p2")).isEqualTo("v4");
+        assertThat(c.create("c1").get("p1")).isEqualTo("v1");
+        assertThat(c.create("c1").get("p2")).isEqualTo("v2");
+        assertThat(c.create("c2").get("p1")).isEqualTo("v3");
+        assertThat(c.create("c2").get("p2")).isEqualTo("v4");
     }
 
     @Test
     public void values_get_unknownParameter() {
-        p1Config.put("c1", "v1");
-        Values values = p1Config.getValues("c1");
+        p1Builder.put("c1", "v1");
+        TestConfigs c = new TestConfigs(p1Builder);
+        Values values = c.create("c1");
         assertThatThrownBy(() -> values.get("p2")).hasMessageContaining("Unknown parameter");
-
     }
 
     @Test
     public void values_get_null() {
-        p1Config.put("c1", "v1");
-        Values values = p1Config.getValues("c1");
+        p1Builder.put("c1", "v1");
+        TestConfigs c = new TestConfigs(p1Builder);
+        Values values = c.create("c1");
         assertThatThrownBy(() -> values.get(null)).hasMessageContaining("Unknown parameter name");
     }
 

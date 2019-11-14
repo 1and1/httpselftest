@@ -123,8 +123,8 @@ public class SelftestServletTest {
 
     public static class SimpleSelftestServlet extends SelftestServlet {
         @Override
-        protected TestConfigs getConfigs() {
-            return new TestConfigs("param1");
+        protected TestConfigs.Builder getConfigs() {
+            return new TestConfigs.Builder("param1");
         }
 
         public static class TestA implements TestCase {

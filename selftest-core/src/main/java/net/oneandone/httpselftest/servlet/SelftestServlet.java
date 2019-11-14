@@ -64,7 +64,7 @@ public abstract class SelftestServlet extends HttpServlet {
     /**
      * @return all predefined test properties
      */
-    protected abstract TestConfigs getConfigs();
+    protected abstract TestConfigs.Builder getConfigs();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -118,7 +118,7 @@ public abstract class SelftestServlet extends HttpServlet {
     }
 
     private void get(HttpServletRequest req, final SelfTestWriter writer) {
-        final TestConfigs configs = getConfigs();
+        final TestConfigs configs = new TestConfigs(getConfigs());
         final String callerIp = req.getRemoteAddr();
         writer.writePageStart(configs, relevantConfigIds(configs, req), determineValuesForGet(req, configs), servletName(req),
                 determineAppBaseUrl(req), lastTestrunStart, callerIp, lastTestrunIp);
@@ -128,7 +128,7 @@ public abstract class SelftestServlet extends HttpServlet {
     }
 
     private void post(HttpServletRequest req, final SelfTestWriter writer) {
-        final TestConfigs configs = getConfigs();
+        final TestConfigs configs = new TestConfigs(getConfigs());
         final String callerIp = req.getRemoteAddr();
 
         final TestConfigs.Values testParams = extractParamsFromRequest(req, configs);
@@ -243,7 +243,7 @@ public abstract class SelftestServlet extends HttpServlet {
         if (configId == null || !configs.getIds().contains(configId)) {
             return configs.createEmpty();
         } else {
-            return configs.getValues(configId);
+            return configs.create(configId);
         }
     }
 

@@ -102,13 +102,13 @@ public class SelftestHtmlWriterTest {
     }
 
     static TestConfigs someTestConfigs() {
-        TestConfigs testConfigs = new TestConfigs("param1", "param2", "param3");
-        testConfigs.fixed("param3");
-        testConfigs.put("live relevant", "value1", "value2", "value3");
-        testConfigs.put("qs relevant", "value1", "value2", "value3");
-        testConfigs.put("live other", "value1", "value2", "value3");
-        testConfigs.put("qs other", "value1", "value2", "value3");
-        return testConfigs;
+        TestConfigs.Builder builder = new TestConfigs.Builder("param1", "param2", "param3");
+        builder.fixed("param3");
+        builder.put("live relevant", "value1", "value2", "value3");
+        builder.put("qs relevant", "value1", "value2", "value3");
+        builder.put("live other", "value1", "value2", "value3");
+        builder.put("qs other", "value1", "value2", "value3");
+        return new TestConfigs(builder);
     }
 
     @Before
@@ -152,14 +152,15 @@ public class SelftestHtmlWriterTest {
 
     @Test
     public void testParametersForm_silent() {
-        TestConfigs configs = new TestConfigs("param1", "param2");
-        configs.put("cid", "val1", "val2");
+        TestConfigs.Builder configBuilder = new TestConfigs.Builder("param1", "param2");
+        configBuilder.put("cid", "val1", "val2");
+        TestConfigs configs = new TestConfigs(configBuilder);
 
         String noParams = writer.testParametersForm(configs, configs.createEmpty(), "servletName").render();
         assertThat(noParams).contains("method=\"POST\"", "action=\"servletName\"", "p-param1", "p-param2",
                 "name=\"config-id\" value=\"\"");
 
-        String fromConfig = writer.testParametersForm(configs, configs.getValues("cid"), "servletName").render();
+        String fromConfig = writer.testParametersForm(configs, configs.create("cid"), "servletName").render();
         assertThat(fromConfig).contains("name=\"config-id\" value=\"cid\"").doesNotContain("readonly");
 
         HashMap<String, String> params = new HashMap<>();
@@ -171,8 +172,9 @@ public class SelftestHtmlWriterTest {
 
     @Test
     public void testParametersForm_fixed_silent() {
-        TestConfigs fixed = new TestConfigs("param1");
-        fixed.fixed("param1");
+        TestConfigs.Builder configBuilder = new TestConfigs.Builder("param1");
+        configBuilder.fixed("param1");
+        TestConfigs fixed = new TestConfigs(configBuilder);
 
         String withFixed = writer.testParametersForm(fixed, fixed.createEmpty(), "servletName").render();
         assertThat(withFixed).contains("readonly=\"true\"", "class=\"fixed\"");
@@ -180,12 +182,14 @@ public class SelftestHtmlWriterTest {
 
     @Test
     public void providedConfigsForm_silent() {
-        TestConfigs configs = new TestConfigs("param1", "param2", "param3");
-        configs.fixed("param2");
-        configs.put("config_1", "value1", "value2", "value3");
-        configs.put("config_2", "value1", "value2", "value3");
+        TestConfigs.Builder configBuilder = new TestConfigs.Builder("param1", "param2", "param3");
+        configBuilder.fixed("param2");
+        configBuilder.put("config_1", "value1", "value2", "value3");
+        configBuilder.put("config_2", "value1", "value2", "value3");
+        TestConfigs configs = new TestConfigs(configBuilder);
 
-        Optional<DomContent> noConfigs = writer.providedConfigsForm(new TestConfigs(), setOf(), Optional.empty());
+        Optional<DomContent> noConfigs =
+                writer.providedConfigsForm(new TestConfigs(new TestConfigs.Builder()), setOf(), Optional.empty());
         assertThat(noConfigs).isNotPresent();
 
         String noIdsRelevant = writer.providedConfigsForm(configs, setOf(), Optional.empty()).get().render();
