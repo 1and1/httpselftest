@@ -166,19 +166,19 @@ public class TestConfigsTest {
     }
 
     @Test
-    public void getValues_null() {
+    public void createForId_null() {
         String nullConfigId = null;
         assertThatThrownBy(() -> p1Config.create(nullConfigId)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
-    public void getValues_exists() {
+    public void createForId_exists() {
         p1Builder.put("c1", "v1");
         new TestConfigs(p1Builder).create("c1");
     }
 
     @Test
-    public void getValues_notExists() {
+    public void createForId_notExists() {
         p1Builder.put("c1", "v1");
         TestConfigs c = new TestConfigs(p1Builder);
         assertThatThrownBy(() -> c.create("c2")).hasMessageContaining("Unknown config id");
@@ -203,31 +203,40 @@ public class TestConfigsTest {
     }
 
     @Test
-    public void create_nullMap() throws Exception {
+    public void createFromValues_nullMap() throws Exception {
         Map<String, String> nullUserValues = null;
         assertThatThrownBy(() -> p1Config.create(nullUserValues)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
-    public void create_null_value() {
+    public void createFromValues_null_value() {
         Map<String, String> params = new HashMap<>();
         params.put("p1", null);
         assertThatThrownBy(() -> p1Config.create(params)).hasMessageContaining(NO_NULL_ELEMENTS);
     }
 
     @Test
-    public void create_unknownParameter_isIgnored() {
+    public void createFromValues_unknownParameter_isIgnored() {
         Map<String, String> params = new HashMap<>();
         params.put("p2", "v2");
         p1Config.create(params);
     }
 
     @Test
-    public void create_missingParameter_usesDefaultValue() {
+    public void createFromValues_missingParameter_usesDefaultValue() {
         TestConfigs c = new TestConfigs(new TestConfigs.Builder("p1", "p2"));
         Map<String, String> params = new HashMap<>();
         params.put("p2", "v2");
         assertThat(c.create(params).get("p1")).isEqualTo("");
+    }
+
+    @Test
+    public void createFromValues_ok() {
+        TestConfigs c = new TestConfigs(new TestConfigs.Builder("p1", "p2"));
+        Map<String, String> params = new HashMap<>();
+        params.put("p1", "v1");
+        params.put("p2", "v2");
+        c.create(params);
     }
 
     @Test
@@ -253,33 +262,24 @@ public class TestConfigsTest {
     }
 
     @Test
-    public void create_ok() {
-        TestConfigs c = new TestConfigs(new TestConfigs.Builder("p1", "p2"));
-        Map<String, String> params = new HashMap<>();
-        params.put("p1", "v1");
-        params.put("p2", "v2");
-        c.create(params);
-    }
-
-    @Test
-    public void createWithId_nullId() {
+    public void createWithIdAndValues_nullId() {
         assertThatThrownBy(() -> p1Config.create(null, emptyMap())).hasMessageContaining(NOT_NULL);
     }
 
     @Test
-    public void createWithId_nullParams() {
+    public void createWithIdAndValues_nullParams() {
         p1Builder.put("c1", "v1");
         assertThatThrownBy(() -> new TestConfigs(p1Builder).create("c1", null)).hasMessageContaining(NOT_NULL);
     }
 
     @Test
-    public void createWithId_unknownId() throws Exception {
+    public void createWithIdAndValues_unknownId() throws Exception {
         p1Builder.put("c1", "v1");
         assertThatThrownBy(() -> new TestConfigs(p1Builder).create("c2", emptyMap())).hasMessageContaining("Unknown config id");
     }
 
     @Test
-    public void createWithId_ok() throws Exception {
+    public void createWithIdAndValues_ok() throws Exception {
         p1Builder.put("c1", "v1");
         new TestConfigs(p1Builder).create("c1", emptyMap());
     }
