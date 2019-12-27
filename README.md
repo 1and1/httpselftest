@@ -23,8 +23,8 @@ The intended use is not clear-cut. The servlet can be used for e.g.
 ```java
 public class MinimalSelftestServlet extends SelftestServlet {
     @Override
-    protected TestConfigs getConfigs() {
-        return new TestConfigs("param1");
+    protected TestConfigs.Builder getConfigs() {
+        return new TestConfigs.Builder("param1");
     }
     public static class TestEcho implements TestCase {
         @Override

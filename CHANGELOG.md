@@ -6,9 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 <!-- Categories: Added, Changed, Deprecated, Removed, Fixed, Security -->
 
 ## [Unreleased]
-- rework TestConfigs
+
+## [0.3.4] - 2019-12-27
 ### Changed
-- implementing Servlets must now provide their configs as TestConfigs.Builder
+- changed TestConfigs to Builder pattern
 
 ## [0.3.3] - 2019-10-10
 - don't flush writers early to prevent potential conflicts with e.g. Content-MD5 filters
