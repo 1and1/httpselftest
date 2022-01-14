@@ -38,6 +38,12 @@ import java.util.stream.Collectors;
 import j2html.TagCreator;
 import j2html.tags.ContainerTag;
 import j2html.tags.DomContent;
+import j2html.tags.specialized.DivTag;
+import j2html.tags.specialized.FormTag;
+import j2html.tags.specialized.H3Tag;
+import j2html.tags.specialized.SpanTag;
+import j2html.tags.specialized.TableTag;
+import j2html.tags.specialized.TrTag;
 import net.oneandone.httpselftest.common.Pair;
 import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.HttpDetails;
@@ -134,7 +140,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
             resultClass = resultClass + " warn";
         }
 
-        ContainerTag div = div().withClasses("group", "nonempty", resultClass).with( //
+        DivTag div = div().withClasses("group", "nonempty", resultClass).with( //
                 h2().with( //
                         text(testRun.testName + " (" + testRun.getDurationMillis() + "ms) - " + testRun.getResult().type), //
                         caretSpan(), //
@@ -158,7 +164,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return logs.stream().anyMatch(details -> details.logs.events.stream().anyMatch(evt -> pred.test(evt, details.renderer)));
     }
 
-    private static ContainerTag indicator(boolean condition, String clazz, String msg) {
+    private static SpanTag indicator(boolean condition, String clazz, String msg) {
         // withCondClass overwrites indicator-inactive
         return span("!").withClass("indicator-inactive").withCondClass(condition, "indicator " + clazz).attr("title", msg);
     }
@@ -222,7 +228,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
             secondClassIds = allIds.stream().filter(id -> !configIdsForCurrentMarket.contains(id)).collect(toSet());
         }
 
-        ContainerTag form = form().withMethod("GET").with( //
+        FormTag form = form().withMethod("GET").with( //
                 div("Available pre-defined parameter sets for this application. Click to transfer values into form:"), //
                 configsTableAsDom(firstClassIds, "relevantMarkets", activeConfigId, hasFixedParams));
         if (!secondClassIds.isEmpty()) {
@@ -249,12 +255,12 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return Arrays.asList(elements);
     }
 
-    private static ContainerTag row(DomContent... elements) {
+    private static TrTag row(DomContent... elements) {
         return tr(listOf(elements).stream().map( //
                 TagCreator::td).toArray(ContainerTag[]::new));
     }
 
-    private static ContainerTag monospacedParagraph(String text) {
+    private static DivTag monospacedParagraph(String text) {
         return div().withClass("mono").with(textBlock(text));
     }
 
@@ -341,7 +347,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
             headerElements.addAll(parserTags);
         }
 
-        ContainerTag header = h3(concat(headerElements));
+        H3Tag header = h3(concat(headerElements));
 
         List<DomContent> httpBlock = new LinkedList<>();
         httpBlock.add(header);
@@ -400,7 +406,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
                     dom.add(br());
                 }
 
-                ContainerTag logDiv = div().withClass("mono log");
+                DivTag logDiv = div().withClass("mono log");
                 info.logs.events.forEach(event -> logDiv.with(logEventAsDom(event, info.renderer)));
                 dom.add(logDiv);
             }
@@ -419,7 +425,7 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         return joined;
     }
 
-    private static ContainerTag configsTableAsDom(Set<String> idsToWrite, String className, Optional<String> activeConfigId,
+    private static TableTag configsTableAsDom(Set<String> idsToWrite, String className, Optional<String> activeConfigId,
             boolean fixedParamsExist) {
         if (idsToWrite.isEmpty()) {
             throw new IllegalStateException("called configsTable with 0 ids");
@@ -436,12 +442,12 @@ public class SelftestHtmlWriter extends SelfTestWriter {
         );
     }
 
-    private static ContainerTag unrunTestAsDom(TestCase test) {
+    private static DivTag unrunTestAsDom(TestCase test) {
         return div().withClasses("group", "test-unrun").with( //
                 h2(test.getName()));
     }
 
-    private static ContainerTag caretSpan() {
+    private static SpanTag caretSpan() {
         return span().withClass("caret");
     }
 

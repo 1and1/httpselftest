@@ -45,23 +45,23 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- production dependencies -->
-        <servlet-api.version>4.0.1</servlet-api.version> <!-- provided -->
-        <j2html.version>1.4.0</j2html.version> <!-- shaded -->
-        <json-simple.version>3.1.0</json-simple.version> <!-- shaded -->
-        <slf4j.version>1.7.28</slf4j.version> <!-- optional -->
-        <logback.version>1.2.3</logback.version> <!-- optional -->
+        <servlet-api.version>3.1.0</servlet-api.version> <!-- provided -->
+        <j2html.version>1.5.0</j2html.version> <!-- shaded -->
+        <json-simple.version>4.0.0</json-simple.version> <!-- shaded -->
+        <slf4j.version>1.7.33</slf4j.version> <!-- optional -->
+        <logback.version>1.2.10</logback.version> <!-- optional -->
 
         <!-- test dependencies -->
-        <junit.version>4.12</junit.version>
-        <assertj.version>3.14.0</assertj.version>
-        <mockito.version>2.28.2</mockito.version>
+        <junit.version>4.13.2</junit.version>
+        <assertj.version>3.22.0</assertj.version>
+        <mockito.version>4.2.0</mockito.version>
         <commons-testing.version>2.1.0</commons-testing.version>
-        <wiremock.version>2.25.1</wiremock.version>
-        <spring.version>5.2.2.RELEASE</spring.version>
+        <wiremock.version>2.32.0</wiremock.version>
+        <spring.version>5.3.15</spring.version>
 
         <!-- plugins -->
-        <shade-plugin.version>3.2.1</shade-plugin.version>
-        <jacoco-plugin.version>0.8.4</jacoco-plugin.version>
+        <shade-plugin.version>3.2.4</shade-plugin.version>
+        <jacoco-plugin.version>0.8.7</jacoco-plugin.version>
 
     </properties>
 

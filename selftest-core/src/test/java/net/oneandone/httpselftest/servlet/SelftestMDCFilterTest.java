@@ -1,8 +1,8 @@
 package net.oneandone.httpselftest.servlet;
 
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import javax.servlet.FilterChain;
@@ -55,7 +55,7 @@ public class SelftestMDCFilterTest {
     @Test
     public void noActionWithoutHeader() throws Exception {
         filter.doFilter(request, response, chain);
-        verifyZeroInteractions(mdcMock);
+        verifyNoInteractions(mdcMock);
     }
 
     @Test
