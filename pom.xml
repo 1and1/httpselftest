@@ -44,8 +44,25 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <!-- version management -->
+        <!-- production dependencies -->
+        <servlet-api.version>4.0.1</servlet-api.version> <!-- provided -->
+        <j2html.version>1.4.0</j2html.version> <!-- shaded -->
+        <json-simple.version>3.1.0</json-simple.version> <!-- shaded -->
+        <slf4j.version>1.7.28</slf4j.version> <!-- optional -->
+        <logback.version>1.2.3</logback.version> <!-- optional -->
+
+        <!-- test dependencies -->
+        <junit.version>4.12</junit.version>
         <assertj.version>3.14.0</assertj.version>
+        <mockito.version>2.28.2</mockito.version>
+        <commons-testing.version>2.1.0</commons-testing.version>
+        <wiremock.version>2.25.1</wiremock.version>
+        <spring.version>5.2.2.RELEASE</spring.version>
+
+        <!-- plugins -->
+        <shade-plugin.version>3.2.1</shade-plugin.version>
+        <jacoco-plugin.version>0.8.4</jacoco-plugin.version>
+
     </properties>
 
     <distributionManagement>
