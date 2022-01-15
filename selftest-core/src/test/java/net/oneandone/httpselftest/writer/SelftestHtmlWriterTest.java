@@ -389,7 +389,7 @@ public class SelftestHtmlWriterTest {
         writer.writeTestOutcome(testRun, snapshot(logs), emptyContext());
 
         String html = out.written();
-        assertThat(html).contains("[th1]", "[INFO]", "info evt", "201", "LOGBACK</span> &rarr;",
+        assertThat(html).contains("[th1]", "[INFO]", "info evt", "202" /* 2020-2029 */, "LOGBACK</span> &rarr;",
                 "<span class=\"mono\">WITHLAYOUT", "NOLAYOUT");
         assertThat(html).contains("<span class=\"url\">http://www.insecure.de</span>");
         assertThat(html).contains("<span class=\"url\">https://www.secure.de</span>");
