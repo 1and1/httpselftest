@@ -141,6 +141,24 @@
                                     <include>com.github.cliftonlabs:json-simple</include>
                                 </includes>
                             </artifactSet>
+                            <filters>
+                                <filter>
+                                    <artifact>com.j2html:j2html</artifact>
+                                    <excludes>
+                                        <exclude>**/MANIFEST.MF</exclude>
+                                        <exclude>**/pom.properties</exclude>
+                                        <exclude>**/pom.xml</exclude>
+                                    </excludes>
+                                </filter>
+                                <filter>
+                                    <artifact>com.github.cliftonlabs:json-simple</artifact>
+                                    <excludes>
+                                        <exclude>**/MANIFEST.MF</exclude>
+                                        <exclude>**/pom.properties</exclude>
+                                        <exclude>**/pom.xml</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <relocations>
                                 <relocation>
                                     <pattern>j2html</pattern>
