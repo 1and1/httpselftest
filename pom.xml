@@ -57,7 +57,8 @@
         <mockito.version>4.2.0</mockito.version>
         <commons-testing.version>2.1.0</commons-testing.version>
         <wiremock.version>2.32.0</wiremock.version>
-        <spring.version>5.3.15</spring.version>
+        <spring.version>5.3.19</spring.version>
+        <spring-boot.version>2.6.7</spring-boot.version>
 
         <!-- plugins -->
         <shade-plugin.version>3.2.4</shade-plugin.version>
