@@ -9,17 +9,17 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
 import org.slf4j.spi.MDCAdapter;
 import org.springframework.test.util.ReflectionTestUtils;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class SelftestMDCFilterTest {
 
     private static final String MDC_ADAPTER_FIELDNAME = "mdcAdapter";
@@ -40,14 +40,14 @@ public class SelftestMDCFilterTest {
 
     private SelftestMDCFilter filter;
 
-    @Before
+    @BeforeEach
     public void prepareMDC() {
         oldAdapter = (MDCAdapter) ReflectionTestUtils.getField(MDC.class, MDC_ADAPTER_FIELDNAME);
         ReflectionTestUtils.setField(MDC.class, MDC_ADAPTER_FIELDNAME, mdcMock);
         filter = new SelftestMDCFilter();
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         ReflectionTestUtils.setField(MDC.class, MDC_ADAPTER_FIELDNAME, oldAdapter);
     }

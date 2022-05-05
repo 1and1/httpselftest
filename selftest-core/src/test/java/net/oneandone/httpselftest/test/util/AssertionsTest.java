@@ -5,9 +5,8 @@ import static net.oneandone.httpselftest.test.util.Assertions.assertFalse;
 import static net.oneandone.httpselftest.test.util.Assertions.assertTrue;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
-
 import net.oneandone.httpselftest.test.api.AssertionException;
+import org.junit.jupiter.api.Test;
 
 public class AssertionsTest {
 

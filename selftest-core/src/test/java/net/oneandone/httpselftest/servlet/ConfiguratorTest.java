@@ -1,8 +1,7 @@
 package net.oneandone.httpselftest.servlet;
 
-import org.junit.Test;
-
 import net.trajano.commons.testing.UtilityClassTestUtil;
+import org.junit.jupiter.api.Test;
 
 public class ConfiguratorTest {
 

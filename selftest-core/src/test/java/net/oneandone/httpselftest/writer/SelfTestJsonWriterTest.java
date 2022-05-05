@@ -5,13 +5,13 @@ import net.oneandone.httpselftest.log.LogAccess;
 import static net.oneandone.httpselftest.log.LogAccess.snapshot;
 import net.oneandone.httpselftest.test.run.TestRunData;
 import net.oneandone.httpselftest.test.run.TestRunResult;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 public class SelfTestJsonWriterTest {
 
@@ -19,13 +19,13 @@ public class SelfTestJsonWriterTest {
 
     private static SelfTestJsonWriter writer;
 
-    @Before
+    @BeforeEach
     public void prepareFile() throws Exception {
         out = new SelftestHtmlWriterTest.CapturingPrintWriter("./target/jsonwritertest.html", "UTF-8");
         writer = new SelfTestJsonWriter(out);
     }
 
-    @After
+    @AfterEach
     public void finishFile() {
         out.close();
     }

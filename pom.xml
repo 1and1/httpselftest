@@ -52,7 +52,7 @@
         <logback.version>1.2.10</logback.version> <!-- optional -->
 
         <!-- test dependencies -->
-        <junit.version>4.13.2</junit.version>
+        <junit.version>5.5.2</junit.version>
         <assertj.version>3.22.0</assertj.version>
         <mockito.version>4.2.0</mockito.version>
         <commons-testing.version>2.1.0</commons-testing.version>
@@ -125,5 +125,16 @@
         </profile>
 
     </profiles>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.2</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
 
 </project>

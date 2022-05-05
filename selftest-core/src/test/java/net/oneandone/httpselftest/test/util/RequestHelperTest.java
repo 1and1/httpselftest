@@ -4,10 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.StringJoiner;
 
-import org.junit.Test;
-
 import net.oneandone.httpselftest.test.api.TestConfigs;
 import net.trajano.commons.testing.UtilityClassTestUtil;
+import org.junit.jupiter.api.Test;
 
 public class RequestHelperTest {
 

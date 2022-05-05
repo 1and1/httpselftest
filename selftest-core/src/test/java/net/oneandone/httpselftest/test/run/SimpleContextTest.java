@@ -1,16 +1,16 @@
 package net.oneandone.httpselftest.test.run;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
-import org.junit.Before;
-import org.junit.Test;
 
 public class SimpleContextTest {
 
     private SimpleContext ctx;
 
-    @Before
+    @BeforeEach
     public void before() {
         ctx = new SimpleContext();
     }

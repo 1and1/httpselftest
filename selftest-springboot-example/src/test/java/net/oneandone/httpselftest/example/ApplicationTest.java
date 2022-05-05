@@ -2,14 +2,14 @@ package net.oneandone.httpselftest.example;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.actuate.autoconfigure.web.server.LocalManagementPort;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import net.oneandone.httpselftest.http.Headers;
 import net.oneandone.httpselftest.http.SocketHttpClient;
@@ -17,7 +17,7 @@ import net.oneandone.httpselftest.http.WrappedRequest;
 import net.oneandone.httpselftest.http.TestResponse;
 import net.oneandone.httpselftest.http.TestRequest;
 
-@RunWith(SpringRunner.class)
+@ExtendWith(SpringExtension.class)
 @SpringBootTest(classes = Application.class, webEnvironment = WebEnvironment.DEFINED_PORT)
 @ActiveProfiles("test")
 public class ApplicationTest {

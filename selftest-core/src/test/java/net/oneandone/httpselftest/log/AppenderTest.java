@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.MDC;
 
 import net.oneandone.httpselftest.log.logback.BoundedInMemoryAppender;
@@ -20,7 +20,7 @@ public class AppenderTest {
     private BoundedInMemoryAppender<String> appender;
     private static Set<String> RUN_IDS = new HashSet<>(Arrays.asList("toastarena", "runId"));
 
-    @Before
+    @BeforeEach
     public void setup() {
         appender = new BoundedInMemoryAppender<>(RUN_IDS, "X-REQUEST-ID");
         MDC.remove("X-REQUEST-ID");

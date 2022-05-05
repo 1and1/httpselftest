@@ -25,12 +25,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInfo;
 import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.util.StringUtils;
@@ -70,14 +69,11 @@ import net.oneandone.httpselftest.test.run.TestRunResult;
 
 public class SelftestHtmlWriterTest {
 
-    @Rule
-    public TestName name = new TestName();
-
     private static CapturingPrintWriter out;
 
     private static SelftestHtmlWriter writer;
 
-    @BeforeClass
+    @BeforeAll
     public static void prepareFile() throws Exception {
         out = new CapturingPrintWriter("./target/writertest.html", "UTF-8");
         writer = new SelftestHtmlWriter(out);
@@ -111,13 +107,13 @@ public class SelftestHtmlWriterTest {
         return new TestConfigs(builder);
     }
 
-    @Before
-    public void prependTestWithName() {
-        testOutput(name.getMethodName());
+    @BeforeEach
+    public void prependTestWithName(TestInfo info) {
+        testOutput(info.getTestMethod().map(method -> method.getName()).orElse("no-name"));
         out.reset();
     }
 
-    @AfterClass
+    @AfterAll
     public static void finishFile() {
         try {
             writer.writePageEnd();

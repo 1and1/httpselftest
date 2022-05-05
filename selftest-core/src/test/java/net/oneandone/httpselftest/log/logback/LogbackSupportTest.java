@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -41,7 +41,7 @@ public class LogbackSupportTest {
     LogbackSupport logbackSupport;
     private AtomicInteger countHolder;
 
-    @Before
+    @BeforeEach
     public void setup() {
         MDC.remove(MDC_KEY);
         logbackSupport = new LogbackSupport(MDC_KEY);

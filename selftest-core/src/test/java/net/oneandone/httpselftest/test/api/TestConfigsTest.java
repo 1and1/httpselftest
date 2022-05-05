@@ -5,20 +5,15 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-import org.junit.Before;
-import org.junit.Test;
-
-import net.oneandone.httpselftest.test.api.TestConfigs;
 import net.oneandone.httpselftest.test.api.TestConfigs.Builder;
 import net.oneandone.httpselftest.test.api.TestConfigs.Values;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("unused")
 public class TestConfigsTest {
 
     private static final String NOT_NULL = "must not be null";
@@ -29,7 +24,7 @@ public class TestConfigsTest {
 
     private TestConfigs p1Config;
 
-    @Before
+    @BeforeEach
     public void before() {
         p1Builder = new TestConfigs.Builder("p1");
         p1Config = new TestConfigs(p1Builder);
@@ -302,7 +297,6 @@ public class TestConfigsTest {
         cb.put("c1", "v1", "v2");
         cb.put("c2", "v3", "v4");
         TestConfigs c = new TestConfigs(cb);
-        Values values = c.create("c1");
 
         assertThat(c.create("c1").get("p1")).isEqualTo("v1");
         assertThat(c.create("c1").get("p2")).isEqualTo("v2");

@@ -4,10 +4,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.any;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.anyUrl;
-import static com.github.tomakehurst.wiremock.client.WireMock.findAll;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -20,15 +18,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.tomakehurst.wiremock.http.Fault;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 
 import net.oneandone.httpselftest.test.api.AssertionException;
@@ -38,8 +34,9 @@ public class SocketHttpClientTest {
     private static final List<String> ALL_HTTP_METHODS =
             Collections.unmodifiableList(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "TRACE"));
 
-    @Rule
-    public WireMockRule wire = new WireMockRule(WireMockConfiguration.options().dynamicPort());
+    @RegisterExtension
+    public WireMockExtension wire = WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
+
     private String baseUrl;
 
     private SocketHttpClient client;
@@ -47,9 +44,10 @@ public class SocketHttpClientTest {
     private SocketMock socketMock;
     private String baseUrlSocket;
 
-    @Before
+    @BeforeEach
     public void setup() throws Exception {
-        baseUrl = "http://localhost:" + wire.port() + "/prefix/";
+        System.out.println("port: "+wire.getPort());
+        baseUrl = "http://localhost:" + wire.getPort() + "/prefix/";
         stub(200);
         client = new SocketHttpClient();
 
@@ -57,7 +55,7 @@ public class SocketHttpClientTest {
         baseUrlSocket = "http://localhost:" + socketMock.port() + "/prefix/";
     }
 
-    @After
+    @AfterEach
     public void cleanup() {
         assertThat(wire.findAllUnmatchedRequests()).isEmpty();
     }
@@ -120,11 +118,11 @@ public class SocketHttpClientTest {
         TestResponse response = client.call(baseUrl, wrapped(new TestRequest("path", "GET")), 1000).response;
 
         // verify request
-        verify(1, anyRequestedFor(anyUrl()));
-        LoggedRequest request = findAll(getRequestedFor(anyUrl())).get(0);
+        wire.verify(1, anyRequestedFor(anyUrl()));
+        LoggedRequest request = wire.findAll(getRequestedFor(anyUrl())).get(0);
         assertThat(request.getMethod()).isEqualTo(RequestMethod.GET);
         assertThat(request.getUrl()).isEqualTo("/prefix/path");
-        assertThat(request.getHeader("Host")).isEqualTo("localhost:" + wire.port());
+        assertThat(request.getHeader("Host")).isEqualTo("localhost:" + wire.getPort());
         assertThat(request.getBodyAsString()).isEqualTo("");
 
         // verify response
@@ -242,7 +240,7 @@ public class SocketHttpClientTest {
         Headers headers = headers("A", "1", "A", "2", "B", "3");
         invoke(new TestRequest("path", "GET", headers));
 
-        LoggedRequest request = findAll(getRequestedFor(anyUrl())).get(0);
+        LoggedRequest request = wire.findAll(getRequestedFor(anyUrl())).get(0);
         assertThat(request.header("A").values()).containsExactly("1", "2");
         assertThat(request.header("B").values()).containsExactly("3");
     }
@@ -366,27 +364,27 @@ public class SocketHttpClientTest {
     // the exception changes between JDK8 and JDK11
     @Test
     public void faultConnectionReset() {
-        stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.CONNECTION_RESET_BY_PEER)));
+        wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.CONNECTION_RESET_BY_PEER)));
         assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class).hasCauseInstanceOf(SocketException.class);
     }
 
     @Test
     public void faultEmptyResponse() {
-        stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
+        wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.EMPTY_RESPONSE)));
         assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class)
                 .hasCauseInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void faultMalformedChunk() {
-        stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
+        wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.MALFORMED_RESPONSE_CHUNK)));
         assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class)
                 .hasCauseInstanceOf(IllegalStateException.class);
     }
 
     @Test
     public void faultRandomData() {
-        stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
+        wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFault(Fault.RANDOM_DATA_THEN_CLOSE)));
         assertThatThrownBy(() -> invoke(simpleGet())).isInstanceOf(HttpException.class)
                 .hasCauseInstanceOf(IllegalStateException.class);
     }
@@ -394,7 +392,7 @@ public class SocketHttpClientTest {
     @Test
     public void httpDetails() {
         WrappedRequest req = new WrappedRequest(new TestRequest("path", "GET", new Headers(), "request corgi"));
-        stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withBody("reeesponse body")));
+        wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withBody("reeesponse body")));
 
         WrappedResponse resp = client.call(baseUrl, req, 1_000);
 
@@ -409,7 +407,7 @@ public class SocketHttpClientTest {
     @Test
     public void httpDetailsOnException() {
         WrappedRequest req = new WrappedRequest(new TestRequest("path", "GET", new Headers(), "request body"));
-        stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFixedDelay(1500)));
+        wire.stubFor(any(anyUrl()).willReturn(aResponse().withStatus(200).withFixedDelay(1500)));
 
         assertThatThrownBy(() -> client.call(baseUrl, req, 1_000)).isInstanceOfSatisfying(HttpException.class, e -> {
             assertThat(e.getBytes()).isEmpty(); // got no response
@@ -419,7 +417,7 @@ public class SocketHttpClientTest {
     }
 
     private LoggedRequest sentRequest() {
-        List<LoggedRequest> sentRequests = findAll(anyRequestedFor(anyUrl()));
+        List<LoggedRequest> sentRequests = wire.findAll(anyRequestedFor(anyUrl()));
         assertThat(sentRequests).as("sanity check: number of requests sent").hasSize(1);
         return sentRequests.get(0);
     }

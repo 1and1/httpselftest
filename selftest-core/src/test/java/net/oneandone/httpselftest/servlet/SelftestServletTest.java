@@ -12,10 +12,10 @@ import java.util.Set;
 
 import javax.servlet.ServletConfig;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -34,7 +34,7 @@ import net.oneandone.httpselftest.test.api.TestCase;
 import net.oneandone.httpselftest.test.api.TestConfigs;
 import net.oneandone.httpselftest.test.api.TestValues;
 
-@RunWith(MockitoJUnitRunner.StrictStubs.class)
+@ExtendWith(MockitoExtension.class)
 public class SelftestServletTest {
 
     @Mock
