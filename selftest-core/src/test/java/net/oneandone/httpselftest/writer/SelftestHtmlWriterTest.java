@@ -308,7 +308,7 @@ public class SelftestHtmlWriterTest {
         writer.writeTestOutcome(testRun, snapshot(logInfos()), emptyContext());
 
         String html = out.written();
-        assertThat(html).contains("<span>    1,</span><br><span>    2,</span><br>", "slash/key&quot;:&quot;slash/value");
+        assertThat(html).contains("<span>    1,</span><br><span>    2,</span><br>", "slash/key&quot;: &quot;slash/value");
     }
 
     @Test
